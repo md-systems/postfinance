@@ -1,6 +1,7 @@
 name: Payment Postfinance
 type: module
 description: Postfinance (http://www.postfinance.ch) integration of the Drupal Payment module.
+package: Postfinance
 core: 8.x
 
 dependencies:
