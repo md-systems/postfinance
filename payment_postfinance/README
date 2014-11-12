@@ -1,0 +1,63 @@
+Configuration setup
+PSPID = Your affiliation name in our system
+Security Key = Secret signature for generation of SHAsign
+
+Send these parameters:
+SHASign: Unique character string for order data validation. A string hashed with the SHA1
+         algorithm will always be 40 characters long
+
+
+Test environment post URL: https://e-payment.postfinance.ch/ncol/test/orderstandard.asp
+Live version post URL: "https://e-payment.postfinance.ch/ncol/prod/orderstandard.asp
+
+
+In the hidden fields of his ordering form, the merchant can send 4 URLs (accepturl, exceptionurl, cancelurl and
+declineurl) where our system redirects the customer at the end of the payment process:
+
+Field Usage
+accepturl URL of the web page to display to the customer when the payment has been
+authorized (status 5), accepted (status 9) or is waiting to be accepted (pending,
+status 51 or 91).
+declineurl URL of the web page to show the customer when the acquirer declines the authorization
+(status 2) more than the maximum permissible number of times.
+exceptionurl URL of the web page to display to the customer when the payment result is
+uncertain (status 52 or 92).
+If this field is empty the customer will be displayed the accepturl instead.
+cancelurl URL of the web page to display to the customer when he cancels the payment
+(status 1).
+If this field is empty the declineurl will be displayed to the customer instead.
+
+
+
+
+
+
+Feedback:
+Parameter Value
+orderID Your order reference
+amount Order amount (not multiplied by 100)
+currency Order currency
+PM Payment method
+ACCEPTANCE Acceptance code returned by acquirer
+STATUS Transaction status (see Appendix 3 for a short status overview)
+CARDNO Masked card number
+PAYID Payment reference in our system
+NC ERROR Error code
+BRAND Card brand (our system derives this from the card number)
+SHASIGN SHA-out signature calculated by our system (if SHA-out configured)
+
+i.e. https://www.yourwebsite.com/acceptpage.asp?orderID=ref12345&currency=EUR&amount=25
+     &PM=CreditCard&ACCEPTANCE=test123&STATUS=5&CARDNO=XXXXXXXXXXXX1111
+     &PAYID=1136745&NCERROR=0&BRAND=VISA
+
+
+The merchant can send us two extra parameters in the hidden fields of the order form, in order to retrieve
+them as feedback parameter after the payment. The following hidden fields are available:
+
+Field Usage
+complus Field for submitting a value you would like returned in the post sale request.
+paramplus Field for submitting some parameters and their values you would like returned
+in the post sale request.
+The field paramplus is not included in the feedback parameters as such; instead,
+the parameters/values you submit in this field will be parsed and the
+resulting parameters added to the http request.

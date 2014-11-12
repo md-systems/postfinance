@@ -76,33 +76,43 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
    */
   public function defaultConfiguration() {
     return parent::defaultConfiguration() + array(
-      'account_id' => '99867-94913159',
+      'pspid' => '99867-94913159',
+      'security_key' => '',
     );
   }
 
   /**
-   * Sets the Postfinance account id.
-   *
-   * @param string $account_id
-   *   Account id.
-   *
-   * @return \Drupal\payment_saferpay\Plugin\Payment\MethodConfiguration\SaferpayPaymentFormConfiguration
-   *   The configuration object for the Saferpay Payment Form payment method plugin.
+   * @param $psid
+   * @return $this
    */
-  public function setAccountId($account_id) {
-    $this->configuration['account_id'] = $account_id;
+  public function setPSPID($psid) {
+    $this->configuration['pspid'] = $psid;
 
     return $this;
   }
 
   /**
-   * Gets the Saferpay account id.
-   *
-   * @return string
-   *   The account id.
+   * @return mixed
    */
-  public function getAccountId() {
-    return $this->configuration['account_id'];
+  public function getPSPID() {
+    return $this->configuration['pspid'];
+  }
+
+  /**
+   * @param $security_key
+   * @return $this
+   */
+  public function setSecurityKey($security_key) {
+    $this->configuration['security_key'] = $security_key;
+
+    return $this;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getSecurityKey() {
+    return $this->configuration['security_key'];
   }
 
   /**
@@ -112,23 +122,33 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
     $form = parent::buildConfigurationForm($form, $form_state);
     $form['#element_validate'][] = array($this, 'formElementsValidate');
 
-    $form['account_id'] = array(
+    $form['pspid'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Account ID'),
-      '#description' => 'Development Account ID: "99867-94913159".',
-      '#default_value' => $this->getAccountId(),
+      '#title' => $this->t('PSPID'),
+      '#description' => 'Your affiliation name in the postfinance system.',
+      '#default_value' => $this->getPSPID(),
+    );
+
+    $form['security_key'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('PSPID'),
+      '#description' => 'Your affiliation name in the postfinance system.',
+      '#default_value' => $this->getSecurityKey(),
     );
 
     return $form;
   }
 
   /**
-   * Implements form validate callback for self::formElements().
+   * @param array $element
+   * @param FormStateInterface $form_state
+   * @param array $form
    */
   public function formElementsValidate(array $element, FormStateInterface $form_state, array $form) {
     $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);
 
-    $this->setAccountId($values['account_id']);
+    $this->setPSPID($values['psid']);
+    $this->setSecurityKey($values['security_key']);
   }
 
 }
