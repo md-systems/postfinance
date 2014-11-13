@@ -76,7 +76,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
    */
   public function defaultConfiguration() {
     return parent::defaultConfiguration() + array(
-      'pspid' => '99867-94913159',
+      'pspid' => '12345-12345678',
       'security_key' => '',
     );
   }
@@ -131,8 +131,8 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
 
     $form['security_key'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('PSPID'),
-      '#description' => 'Your affiliation name in the postfinance system.',
+      '#title' => $this->t('Secret Key'),
+      '#description' => 'Secret key to generate an unique character string for order data validation.',
       '#default_value' => $this->getSecurityKey(),
     );
 
@@ -147,7 +147,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   public function formElementsValidate(array $element, FormStateInterface $form_state, array $form) {
     $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);
 
-    $this->setPSPID($values['psid']);
+    $this->setPSPID($values['pspid']);
     $this->setSecurityKey($values['security_key']);
   }
 

@@ -1,0 +1,11 @@
+id: postfinance_payment_form
+label: 'Postfinance Payment Form'
+ownerId: 1
+pluginConfiguration:
+  message_text: ''
+  message_text_format: plain_text
+  pspid: 12345-12345678
+  security_key: ''
+pluginId: payment_postfinance_payment_form
+status: true
+uuid: 324fad23-d1da-4059-b621-3378fa67b480

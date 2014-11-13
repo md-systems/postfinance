@@ -1,0 +1,27 @@
+payment_postfinance.response_accept:
+  path: '/postfinance/accept/{payment}'
+  defaults:
+    _controller: '\Drupal\payment_postfinance\Controller\PostfinanceResponseController::processAcceptResponse'
+  requirements:
+    _access: 'TRUE'
+
+payment_postfinance.response_decline:
+  path: '/postfinance/decline/{payment}'
+  defaults:
+    _controller: '\Drupal\payment_postfinance\Controller\PostfinanceResponseController::processDeclineResponse'
+  requirements:
+    _access: 'TRUE'
+
+payment_postfinance.response_exception:
+  path: '/postfinance/exception/{payment}'
+  defaults:
+    _controller: '\Drupal\payment_postfinance\Controller\PostfinanceResponseController::processExceptionResponse'
+  requirements:
+    _access: 'TRUE'
+
+payment_postfinance.response_cancel:
+  path: '/postfinance/cancel/{payment}'
+  defaults:
+    _controller: '\Drupal\payment_postfinance\Controller\PostfinanceResponseController::processCancelResponse'
+  requirements:
+    _access: 'TRUE'

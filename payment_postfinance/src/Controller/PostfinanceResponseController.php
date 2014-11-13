@@ -16,51 +16,57 @@ use Symfony\Component\HttpFoundation\Request;
 class PostfinanceResponseController {
 
   /**
-   * URL to which the customer is to be forwarded to via browser redirect
-   * after the successful reservation. Postfinance appends the
-   * confirmation message (PayConfirm) by GET to this URL.
+   * URL of the web page to display to the customer when the payment has been
+   * authorized (status 5), accepted (status 9) or is waiting to be accepted (pending,
+   * status 51 or 91).
    *
    * @param Request $request
    *   Request
    * @param PaymentInterface $payment
    *   The Payment Entity type.
    */
-  public function processSuccessResponse(Request $request, PaymentInterface $payment) {
+  public function processAcceptResponse(Request $request, PaymentInterface $payment) {
 
   }
 
   /**
-   * URL to which the customer is to be forwarded to via browser redirect if the authorization attempt failed.
+   * URL of the web page to show the customer when the acquirer declines the authorization
+   * (status 2) more than the maximum permissible number of times.
    *
    * @param Request $request
    *   Request
    * @param PaymentInterface $payment
    *   The Payment Entity type.
    */
-  public function processFailResponse(Request $request, PaymentInterface $payment) {
+  public function processDeclineResponse(Request $request, PaymentInterface $payment) {
 
   }
 
   /**
-   * URL to which the customer is to be forwarded to via browser redirect if he aborts the transaction.
+   * URL of the web page to display to the customer when the payment result is
+   * uncertain (status 52 or 92).
+   * If this field is empty the customer will be displayed the accepturl instead.
    *
    * @param Request $request
    *   Request
    * @param PaymentInterface $payment
    *   The Payment Entity type.
    */
-  public function processBackResponse(Request $request, PaymentInterface $payment) {
+  public function processExceptionResponse(Request $request, PaymentInterface $payment) {
 
   }
 
   /**
+   * URL of the web page to display to the customer when he cancels the payment
+   * (status 1).
+   * If this field is empty the declineurl will be displayed to the customer instead.
    *
    * @param Request $request
    *   Request
    * @param PaymentInterface $payment
    *   The Payment Entity type.
    */
-  public function processNotifyResponse(Request $request, PaymentInterface $payment) {
+  public function processCancelResponse(Request $request, PaymentInterface $payment) {
     $this->savePayment($payment, 'payment_config');
 
     // @todo: Logger & drupal_set_message payment config.

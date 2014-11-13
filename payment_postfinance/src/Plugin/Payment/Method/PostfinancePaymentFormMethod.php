@@ -60,7 +60,7 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
    */
   public function __construct(array $configuration, $plugin_id, array $plugin_definition, EventDispatcherInterface $event_dispatcher, Token $token, ModuleHandlerInterface $module_handler, PaymentStatusManager $payment_status_manager) {
     $configuration += $this->defaultConfiguration();
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $event_dispatcher, $token, $module_handler);
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler, $event_dispatcher, $token);
     $this->paymentStatusManager = $payment_status_manager;
 
     $this->pluginDefinition['message_text'] = '';
@@ -93,7 +93,50 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
    * Performs the actual payment execution.
    */
   protected function doExecutePayment() {
-    // Do payment execution here.
+    /** @var \Drupal\payment\Entity\PaymentInterface $payment */
+    $payment = $this->getPayment();
+
+    $generator = \Drupal::urlGenerator();
+
+    $payment_config = \Drupal::config('payment_postfinance.settings');
+
+    /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
+    $currency = Currency::load($payment->getCurrencyCode());
+
+
+    $orderID = $payment->id();
+    $amount = intval($payment->getamount() * $currency->getSubunits());
+    $currency = $payment->getCurrencyCode();
+    $pspid = $this->pluginDefinition['pspid'];
+    $security_key = $this->pluginDefinition['security_key'];
+
+    // Generate unique character string for order data validation.
+    $shaSign = sha1($orderID . $amount . $currency . $pspid . $security_key);
+
+    // @todo: Make a correct configurable payment description.
+    $payment_data = array(
+      'PSPID' => $pspid,
+      'orderID' => $orderID,
+      'amount' => $amount,
+      'currency' => $currency,
+      'language' => 'en_US',
+      'SHASign' => $shaSign,
+      'accepturl' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $orderID), array('absolute' => TRUE)),
+      'declineurl' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $orderID), array('absolute' => TRUE)),
+      'exceptionurl' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $orderID), array('absolute' => TRUE)),
+      'cancelurl' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $orderID), array('absolute' => TRUE)),
+    );
+
+    $payment_link = Url::fromUri($payment_config->get('payment_link'), array('query' => $payment_data))->toString();
+
+    $response = new RedirectResponse($payment_link);
+    $listener = function (FilterResponseEvent $event) use ($response) {
+      $event->setResponse($response);
+      $event->stopPropagation();
+    };
+    $this->eventDispatcher->addListener(KernelEvents::RESPONSE, $listener, 999);
+
+    $payment->save();
   }
 
   /**
