@@ -111,7 +111,7 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     $security_key = $this->pluginDefinition['security_key'];
 
     // Generate unique character string for order data validation.
-    $shaSign = sha1($orderID . $amount . $currency . $pspid . $security_key);
+    $shaSign = strtoupper(sha1($orderID . $amount . $currency . $pspid . $security_key));
 
     // @todo: Make a correct configurable payment description.
     $payment_data = array(
@@ -125,9 +125,21 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
       'declineurl' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $orderID), array('absolute' => TRUE)),
       'exceptionurl' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $orderID), array('absolute' => TRUE)),
       'cancelurl' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $orderID), array('absolute' => TRUE)),
+
+//       @todo: Not required?
+//      'CN' => 'Christian',
+//      'EMAIL' => 'christian.broekmeulen@hotmail.com',
+//      'owneraddress' => 'Hoge Sexweg 230',
+//      'ownerZIP' => '7041EN',
+//      'ownertown' => 'sHeerenberg',
+//      'ownercty' => 'Dutchland',
+//      'ownertelno' => '09060504',
+//      'COM' => 'Order Description here',
     );
 
-    $payment_link = Url::fromUri($payment_config->get('payment_link'), array('query' => $payment_data))->toString();
+    $payment_link = Url::fromUri($payment_config->get('payment_link'), array(
+      'query' => $payment_data,
+    ))->toString();
 
     $response = new RedirectResponse($payment_link);
     $listener = function (FilterResponseEvent $event) use ($response) {
@@ -144,7 +156,6 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
    */
   protected function getSupportedCurrencies() {
     return TRUE;
-
   }
 
   /**

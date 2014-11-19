@@ -1,0 +1,6 @@
+postfinance_test.postfinance_test_form:
+  path: '/postfinance/PostfinanceTestForm'
+  defaults:
+    _form: '\Drupal\payment_postfinance_test\Form\PostfinanceTestForm'
+  requirements:
+    _access: 'TRUE'
