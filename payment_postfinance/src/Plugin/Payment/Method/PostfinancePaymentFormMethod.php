@@ -125,16 +125,6 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
       'declineurl' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $orderID), array('absolute' => TRUE)),
       'exceptionurl' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $orderID), array('absolute' => TRUE)),
       'cancelurl' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $orderID), array('absolute' => TRUE)),
-
-//       @todo: Not required?
-//      'CN' => 'Christian',
-//      'EMAIL' => 'christian.broekmeulen@hotmail.com',
-//      'owneraddress' => 'Hoge Sexweg 230',
-//      'ownerZIP' => '7041EN',
-//      'ownertown' => 'sHeerenberg',
-//      'ownercty' => 'Dutchland',
-//      'ownertelno' => '09060504',
-//      'COM' => 'Order Description here',
     );
 
     $payment_link = Url::fromUri($payment_config->get('payment_link'), array(

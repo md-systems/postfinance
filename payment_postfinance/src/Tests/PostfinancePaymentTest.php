@@ -106,30 +106,38 @@ class PostfinancePaymentTest extends WebTestBase {
    * Tests succesfull Postfinance payment.
    */
   function testPostfinanceSuccessPayment() {
-    $generator = \Drupal::urlGenerator();
-
+    // Set payment link to test mode
     $payment_config = \Drupal::config('payment_postfinance.settings');
-
-    $payment_config->set('payment_link', $GLOBALS['base_url'] . $generator->generateFromRoute('postfinance_test.postfinance_test_form'));
+    $payment_config->set('payment_link', $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
     $payment_config->save();
 
-    // Retrieve plugin configuration of created node
+    // Retrieve plugin configuration holds the payment data.
     $plugin_configuration = $this->node->{$this->field_name}->plugin_configuration;
 
-    // Array of Saferpay payment method configuration.
-    //$postfinance_payment_method_configuration = entity_load('payment_method_configuration', 'payment_postfinance_payment_form')->getPluginConfiguration();
+    debug($plugin_configuration, 'plugin configuration');
 
+    // Postfinance payment method configuration values.
+    $postfinance_payment_method_configuration = entity_load('payment_method_configuration', 'postfinance_payment_form')->getPluginConfiguration();
 
-    $payment_link = Url::fromRoute('postfinance_test.postfinance_test_form')->toString();
+    debug($postfinance_payment_method_configuration, 'payment method configuration');
 
-    $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . $payment_link);
-
-    $this->drupalGet($GLOBALS['base_url'] . $payment_link);
-
-    $calculated_amount = $this->calculateAmount($plugin_configuration['amount'], $plugin_configuration['quantity'], 'XXX');
+    // Check if payment link is correctly set.
+    $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
     // Create saferpay payment
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
+
+    $this->assertText('PSPID12345-12345678');
+    $this->assertText('orderID1');
+    $this->assertText('amount0');
+    $this->assertText('currencyXXX');
+    $this->assertText('languageen_US');
+    $this->assertText('SHASign7CCD396B6BE3CC7C519DCE7A54BBA9DB982D8D5E');
+
+    // Finish payment
+    $this->drupalPostForm(NULL, array(), t('Submit'));
+
+    $this->assertText('test assertion');
   }
 
   /**
@@ -139,8 +147,8 @@ class PostfinancePaymentTest extends WebTestBase {
    *  Base amount
    * @param $quantity
    *  Quantity
-   * @param $currency
-   *  Currency object
+   * @param $currency_code
+   *  Currency code
    * @return int
    *  Returns the total amount
    */
