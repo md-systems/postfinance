@@ -6,6 +6,7 @@
 
 namespace Drupal\payment_postfinance\Controller;
 
+use Drupal\currency\Entity\Currency;
 use Drupal\payment\Entity\Payment;
 use Drupal\payment\Entity\PaymentInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +27,32 @@ class PostfinanceResponseController {
    *   The Payment Entity type.
    */
   public function processAcceptResponse(Request $request, PaymentInterface $payment) {
+    // The definition of the plugin implementation.
+    $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
+    /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
+    $currency = Currency::load($payment->getCurrencyCode());
+
+    // Payment Data.
+    $payment_data = array(
+      'orderID' => $payment->id(),
+      'amount' => intval($payment->getamount() * $currency->getSubunits()),
+      'currency' => $payment->getCurrencyCode(),
+      'pspid' => $plugin_definition['pspid'],
+      'security_key' => $plugin_definition['security_key'],
+    );
+
+    // Generate local SHASign.
+    $payment_data['SHASign'] = strtoupper(sha1($payment_data['orderID'] . $payment_data['amount'] . $payment_data['currency'] . $payment_data['pspid'] . $payment_data['security_key']));
+
+    // Check correctly generated SHASign
+    if (!$payment_data['SHASign'] == $request->get('SHASIGN')) {
+      $this->savePayment($payment, 'payment_failed');
+      \Drupal::logger(t('Payment verification failed: @error'),array('@error' => 'SHASign did not equal'))->warning('PostfinanceResponseController.php');
+      drupal_set_message(t('Payment verification failed: @error.', array('@error' => 'Verification code incorrect')), 'error');
+    }
+
+    $this->savePayment($payment, 'payment_success');
   }
 
   /**
@@ -39,7 +65,7 @@ class PostfinanceResponseController {
    *   The Payment Entity type.
    */
   public function processDeclineResponse(Request $request, PaymentInterface $payment) {
-
+    $this->savePayment($payment, 'payment_failed');
   }
 
   /**
@@ -53,7 +79,7 @@ class PostfinanceResponseController {
    *   The Payment Entity type.
    */
   public function processExceptionResponse(Request $request, PaymentInterface $payment) {
-
+    $this->savePayment($payment, 'payment_failed');
   }
 
   /**
@@ -67,9 +93,7 @@ class PostfinanceResponseController {
    *   The Payment Entity type.
    */
   public function processCancelResponse(Request $request, PaymentInterface $payment) {
-    $this->savePayment($payment, 'payment_config');
-
-    // @todo: Logger & drupal_set_message payment config.
+    $this->savePayment($payment, 'payment_cancelled');
   }
 
   /**

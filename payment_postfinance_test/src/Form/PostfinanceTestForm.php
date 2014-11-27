@@ -65,8 +65,8 @@ class PostfinanceTestForm extends FormBase {
     }
 
     // Don't generate the route, use the submitted url.
-    $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'success';
-    $response_url = $request->query->get($response_url_key . 'Url');
+    $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'accept';
+    $response_url = $request->query->get($response_url_key . 'url');
 
     $form['#action'] = $response_url;
     $form['actions']['#type'] = 'actions';

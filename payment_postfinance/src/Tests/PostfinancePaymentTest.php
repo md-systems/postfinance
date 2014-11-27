@@ -111,15 +111,11 @@ class PostfinancePaymentTest extends WebTestBase {
     $payment_config->set('payment_link', $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
     $payment_config->save();
 
-    // Retrieve plugin configuration holds the payment data.
-    $plugin_configuration = $this->node->{$this->field_name}->plugin_configuration;
-
-    debug($plugin_configuration, 'plugin configuration');
-
-    // Postfinance payment method configuration values.
-    $postfinance_payment_method_configuration = entity_load('payment_method_configuration', 'postfinance_payment_form')->getPluginConfiguration();
-
-    debug($postfinance_payment_method_configuration, 'payment method configuration');
+//    // Retrieve plugin configuration holds the payment data.
+//    $plugin_configuration = $this->node->{$this->field_name}->plugin_configuration;
+//
+//    // Postfinance payment method configuration values.
+//    $postfinance_payment_method_configuration = entity_load('payment_method_configuration', 'postfinance_payment_form')->getPluginConfiguration();
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
@@ -127,7 +123,7 @@ class PostfinancePaymentTest extends WebTestBase {
     // Create saferpay payment
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
-    $this->assertText('PSPID12345-12345678');
+    $this->assertText('pspid12345-12345678');
     $this->assertText('orderID1');
     $this->assertText('amount0');
     $this->assertText('currencyXXX');
@@ -137,7 +133,13 @@ class PostfinancePaymentTest extends WebTestBase {
     // Finish payment
     $this->drupalPostForm(NULL, array(), t('Submit'));
 
-    $this->assertText('test assertion');
+    // Check if payment was succesfully created
+    $this->drupalGet('payment/1');
+    $this->assertNoText('Failed');
+    $this->assertText('pay me man');
+    $this->assertText('XXX 123.00');
+    $this->assertText('XXX 246.00');
+    $this->assertText('Completed');
   }
 
   /**

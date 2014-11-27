@@ -103,29 +103,21 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
     $currency = Currency::load($payment->getCurrencyCode());
 
-
-    $orderID = $payment->id();
-    $amount = intval($payment->getamount() * $currency->getSubunits());
-    $currency = $payment->getCurrencyCode();
-    $pspid = $this->pluginDefinition['pspid'];
-    $security_key = $this->pluginDefinition['security_key'];
-
-    // Generate unique character string for order data validation.
-    $shaSign = strtoupper(sha1($orderID . $amount . $currency . $pspid . $security_key));
-
     // @todo: Make a correct configurable payment description.
     $payment_data = array(
-      'PSPID' => $pspid,
-      'orderID' => $orderID,
-      'amount' => $amount,
-      'currency' => $currency,
+      'orderID' => $payment->id(),
+      'amount' => intval($payment->getamount() * $currency->getSubunits()),
+      'currency' => $payment->getCurrencyCode(),
+      'pspid' => $this->pluginDefinition['pspid'],
+      'security_key' => $this->pluginDefinition['security_key'],
       'language' => 'en_US',
-      'SHASign' => $shaSign,
-      'accepturl' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $orderID), array('absolute' => TRUE)),
-      'declineurl' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $orderID), array('absolute' => TRUE)),
-      'exceptionurl' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $orderID), array('absolute' => TRUE)),
-      'cancelurl' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $orderID), array('absolute' => TRUE)),
+      'accepturl' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'declineurl' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'exceptionurl' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'cancelurl' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
     );
+
+    $payment_data['SHASign'] = strtoupper(sha1($payment_data['orderID'] . $payment_data['amount'] . $payment_data['currency'] . $payment_data['pspid'] . $payment_data['security_key']));
 
     $payment_link = Url::fromUri($payment_config->get('payment_link'), array(
       'query' => $payment_data,
