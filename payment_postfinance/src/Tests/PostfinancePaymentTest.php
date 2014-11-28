@@ -78,11 +78,10 @@ class PostfinancePaymentTest extends WebTestBase {
       'type' => 'article',
       $this->field_name => array(
         'plugin_configuration' => array(
-          'amount' => '123',
           'currency_code' => 'XXX',
           'name' => 'payment_basic',
-          'payment_id' => NULL,
           'quantity' => '2',
+          'amount' => '123',
           'description' => 'pay me man',
         ),
         'plugin_id' => 'payment_basic',
@@ -103,9 +102,9 @@ class PostfinancePaymentTest extends WebTestBase {
   }
 
   /**
-   * Tests succesfull Postfinance payment.
+   * Tests accept Postfinance payment.
    */
-  function testPostfinanceSuccessPayment() {
+  function testPostfinanceAcceptPayment() {
     // Set payment link to test mode
     $payment_config = \Drupal::config('payment_postfinance.settings');
     $payment_config->set('payment_link', $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
@@ -140,6 +139,28 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->assertText('XXX 123.00');
     $this->assertText('XXX 246.00');
     $this->assertText('Completed');
+  }
+
+
+  /**
+   * Tests declining Postfinance payment.
+   */
+  function testPostfinanceDeclinePayment() {
+
+  }
+
+  /**
+   * Tests exception Postfinance payment.
+   */
+  function testPostfinanceExceptionPayment() {
+
+  }
+
+  /**
+   * Tests cancel Postfinance payment.
+   */
+  function testPostfinanceCancelPayment() {
+
   }
 
   /**
