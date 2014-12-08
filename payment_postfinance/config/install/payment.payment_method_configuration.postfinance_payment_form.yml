@@ -4,8 +4,9 @@ ownerId: 1
 pluginConfiguration:
   message_text: ''
   message_text_format: plain_text
-  pspid: 12345-12345678
+  pspid: drupalDEMO
   security_key: ''
+  language: 'en_US'
 pluginId: payment_postfinance_payment_form
 status: true
 uuid: 324fad23-d1da-4059-b621-3378fa67b480

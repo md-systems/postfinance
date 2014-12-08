@@ -76,7 +76,8 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
    */
   public function defaultConfiguration() {
     return parent::defaultConfiguration() + array(
-      'pspid' => '12345-12345678',
+      'pspid' => 'drupalDEMO',
+      'pspid_password' => '6BR1M/oA{u',
       'security_key' => '',
     );
   }
@@ -99,6 +100,23 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   }
 
   /**
+   * @param $psid_password
+   * @return $this
+   */
+  public function setPSPIDPassword($psid_password) {
+    $this->configuration['pspid_password'] = $psid_password;
+
+    return $this;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getPSPIDPassword() {
+    return $this->configuration['pspid_password'];
+  }
+
+  /**
    * @param $security_key
    * @return $this
    */
@@ -113,6 +131,23 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
    */
   public function getSecurityKey() {
     return $this->configuration['security_key'];
+  }
+
+  /**
+   * @param $language
+   * @return $this
+   */
+  public function setLanguage($language) {
+    $this->configuration['language'] = $language;
+
+    return $this;
+  }
+
+  /**
+   * @return mixed
+   */
+  public function getLanguage() {
+    return $this->configuration['language'];
   }
 
   /**
@@ -136,6 +171,17 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
       '#default_value' => $this->getSecurityKey(),
     );
 
+    // @TODO: Add more languages
+    $form['language'] = array(
+      '#type' => 'select',
+      '#title' => $this->t('Language'),
+      '#options' => array(
+        'en_US' => t('English'),
+      ),
+      '#description' => 'Your affiliation name in the postfinance system.',
+      '#default_value' => $this->getLanguage(),
+    );
+
     return $form;
   }
 
@@ -149,6 +195,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
 
     $this->setPSPID($values['pspid']);
     $this->setSecurityKey($values['security_key']);
+    $this->setLanguage($values['language']);
   }
 
 }

@@ -66,6 +66,7 @@ class PostfinancePaymentFormDeriver extends DeriverBase implements ContainerDeri
             //'active' => $payment_method->status(),
             'pspid' => $configuration_plugin->getPSPID(),
             'security_key' => $configuration_plugin->getSecurityKey(),
+            'language' => $configuration_plugin->getLanguage(),
           ) + $base_plugin_definition;
       }
     }

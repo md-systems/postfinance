@@ -66,6 +66,10 @@ class PostfinanceResponseController {
    */
   public function processDeclineResponse(Request $request, PaymentInterface $payment) {
     $this->savePayment($payment, 'payment_failed');
+
+    $message = 'Postfinance communication declined. Invalid data received from Postfinance.';
+    \Drupal::logger('postfinance')->error('Processing declined with exception @e.', array('@e' => $message));
+    drupal_set_message(t('Payment processing declined.'), 'error');
   }
 
   /**
@@ -80,6 +84,10 @@ class PostfinanceResponseController {
    */
   public function processExceptionResponse(Request $request, PaymentInterface $payment) {
     $this->savePayment($payment, 'payment_failed');
+
+    $message = 'Postfinance communication exception. Invalid data received from Postfinance.';
+    \Drupal::logger('postfinance')->error('Processing failed with exception @e.', array('@e' => $message));
+    drupal_set_message(t('Payment processing exception.'), 'error');
   }
 
   /**
@@ -94,6 +102,10 @@ class PostfinanceResponseController {
    */
   public function processCancelResponse(Request $request, PaymentInterface $payment) {
     $this->savePayment($payment, 'payment_cancelled');
+
+    $message = 'Postfinance communication cancelled. Payment cancelled';
+    \Drupal::logger('postfinance')->error('Processing failed with exception @e.', array('@e' => $message));
+    drupal_set_message(t('Payment processing cancelled.'), 'error');
   }
 
   /**

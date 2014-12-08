@@ -34,16 +34,16 @@ class PostfinanceTestForm extends FormBase {
       drupal_set_message($key . $value);
     }
 
-    $payment = Payment::load($request->query->get('orderID'));
+    $payment = Payment::load($request->query->get('ORDERID'));
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
     $callback_parameters = array();
 
     if($success) {
       $callback_parameters = array(
-        'orderID' => $request->query->get('orderID'),
-        'amount' => $request->query->get('amount'),
-        'currency' => $request->query->get('currency'),
+        'orderID' => $request->query->get('ORDERID'),
+        'amount' => $request->query->get('AMOUNT'),
+        'currency' => $request->query->get('CURRENCY'),
         'PM' => 'CreditCard',
         'ACCEPTANCE' => 'test123',
         'STATUS' => 5,
@@ -51,8 +51,8 @@ class PostfinanceTestForm extends FormBase {
         'PAYID' => 1136745,
         'NCERROR' => 0,
         'BRAND' => 'VISA',
-        'SHASIGN' => strtoupper(sha1($request->query->get('orderID') .
-          $request->query->get('amount') . $request->query->get('currency') .
+        'SHASIGN' => strtoupper(sha1($request->query->get('ORDERID') .
+          $request->query->get('AMOUNT') . $request->query->get('CURRENCY') .
           $request->query->get('PSPID') . $plugin_definition['security_key'])),
       );
     }
@@ -66,7 +66,7 @@ class PostfinanceTestForm extends FormBase {
 
     // Don't generate the route, use the submitted url.
     $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'accept';
-    $response_url = $request->query->get($response_url_key . 'url');
+    $response_url = $request->query->get($response_url_key . 'URL');
 
     $form['#action'] = $response_url;
     $form['actions']['#type'] = 'actions';

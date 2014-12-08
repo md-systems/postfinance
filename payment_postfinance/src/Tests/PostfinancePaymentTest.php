@@ -99,17 +99,24 @@ class PostfinancePaymentTest extends WebTestBase {
       'payment.payment.view.any'
     ));
     $this->drupalLogin($this->admin_user);
+
+    // Set payment link to test mode
+    $payment_config = \Drupal::config('payment_postfinance.settings');
+    $payment_config->set('payment_link', $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
+    $payment_config->save();
   }
 
   /**
    * Tests accept Postfinance payment.
    */
   function testPostfinanceAcceptPayment() {
-    // Set payment link to test mode
-    $payment_config = \Drupal::config('payment_postfinance.settings');
-    $payment_config->set('payment_link', $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
-    $payment_config->save();
+    // Set payment to accept
+    \Drupal::state()->set('postfinance.return_url_key', 'ACCEPT');
 
+    // Load payment configuration
+    $payment_config = \Drupal::config('payment_postfinance.settings');
+
+    // @todo: Can plugin configuration be used for testing?
 //    // Retrieve plugin configuration holds the payment data.
 //    $plugin_configuration = $this->node->{$this->field_name}->plugin_configuration;
 //
@@ -122,12 +129,12 @@ class PostfinancePaymentTest extends WebTestBase {
     // Create saferpay payment
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
-    $this->assertText('pspid12345-12345678');
-    $this->assertText('orderID1');
-    $this->assertText('amount0');
-    $this->assertText('currencyXXX');
-    $this->assertText('languageen_US');
-    $this->assertText('SHASign7CCD396B6BE3CC7C519DCE7A54BBA9DB982D8D5E');
+    $this->assertText('PSPIDdrupalDEMO');
+    $this->assertText('ORDERID1');
+    $this->assertText('AMOUNT246');
+    $this->assertText('CURRENCYXXX');
+    $this->assertText('LANGUAGEen_US');
+    $this->assertText('SHASignC40EF94C09068102C6A5AFF9605D2927B1F3F3A8');
 
     // Finish payment
     $this->drupalPostForm(NULL, array(), t('Submit'));
@@ -141,26 +148,79 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->assertText('Completed');
   }
 
-
   /**
    * Tests declining Postfinance payment.
    */
   function testPostfinanceDeclinePayment() {
+    // Set payment to accept
+    \Drupal::state()->set('postfinance.return_url_key', 'DECLINE');
 
+    // Load payment configuration
+    $payment_config = \Drupal::config('payment_postfinance.settings');
+
+    // Check if payment link is correctly set.
+    $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
+
+    // Create saferpay payment
+    $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
+
+    // Finish payment
+    $this->drupalPostForm(NULL, array(), t('Submit'));
+
+    // Check if payment was succesfully created
+    $this->drupalGet('payment/1');
+    $this->assertNoText('Completed');
+    $this->assertText('Failed');
   }
 
   /**
    * Tests exception Postfinance payment.
    */
   function testPostfinanceExceptionPayment() {
+    // Set payment to accept
+    \Drupal::state()->set('postfinance.return_url_key', 'EXCEPTION');
 
+    // Load payment configuration
+    $payment_config = \Drupal::config('payment_postfinance.settings');
+
+    // Check if payment link is correctly set.
+    $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
+
+    // Create saferpay payment
+    $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
+
+    // Finish payment
+    $this->drupalPostForm(NULL, array(), t('Submit'));
+
+    // Check if payment was succesfully created
+    $this->drupalGet('payment/1');
+    $this->assertNoText('Completed');
+    $this->assertText('Failed');
   }
 
   /**
    * Tests cancel Postfinance payment.
    */
   function testPostfinanceCancelPayment() {
+    // Set payment to accept
+    \Drupal::state()->set('postfinance.return_url_key', 'CANCEL');
 
+    // Load payment configuration
+    $payment_config = \Drupal::config('payment_postfinance.settings');
+
+    // Check if payment link is correctly set.
+    $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
+
+    // Create saferpay payment
+    $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
+
+    // Finish payment
+    $this->drupalPostForm(NULL, array(), t('Submit'));
+
+    // Check if payment was succesfully created
+    $this->drupalGet('payment/1');
+    $this->assertNoText('Completed');
+    $this->assertText('Cancelled');
   }
 
   /**

@@ -103,26 +103,31 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
     $currency = Currency::load($payment->getCurrencyCode());
 
-    // @todo: Make a correct configurable payment description.
+    // Payment data to be send to Postfinance.
     $payment_data = array(
-      'orderID' => $payment->id(),
-      'amount' => intval($payment->getamount() * $currency->getSubunits()),
-      'currency' => $payment->getCurrencyCode(),
-      'pspid' => $this->pluginDefinition['pspid'],
-      'security_key' => $this->pluginDefinition['security_key'],
-      'language' => 'en_US',
-      'accepturl' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $payment->id()), array('absolute' => TRUE)),
-      'declineurl' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $payment->id()), array('absolute' => TRUE)),
-      'exceptionurl' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $payment->id()), array('absolute' => TRUE)),
-      'cancelurl' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'PSPID' => $this->pluginDefinition['pspid'],
+      'ORDERID' => $payment->id(),
+      'AMOUNT' => $this->calculateAmount($payment->getamount(), $currency->getSubunits()),
+      'CURRENCY' => $payment->getCurrencyCode(),
+      'LANGUAGE' => $this->pluginDefinition['language'],
+      'ACCEPTURL' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'DECLINEURL' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'EXCEPTIONURL' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
     );
 
-    $payment_data['SHASign'] = strtoupper(sha1($payment_data['orderID'] . $payment_data['amount'] . $payment_data['currency'] . $payment_data['pspid'] . $payment_data['security_key']));
+    // Filter array for empty values
+    array_filter($payment_data);
 
+    // Generate the SHASign.
+    $payment_data['SHASign'] = $this->generateShaIN($payment_data, $this->pluginDefinition['security_key']);
+
+    // Generate payment link with correct query.
     $payment_link = Url::fromUri($payment_config->get('payment_link'), array(
       'query' => $payment_data,
     ))->toString();
 
+    // Redirect to generated payment link.
     $response = new RedirectResponse($payment_link);
     $listener = function (FilterResponseEvent $event) use ($response) {
       $event->setResponse($response);
@@ -130,6 +135,7 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     };
     $this->eventDispatcher->addListener(KernelEvents::RESPONSE, $listener, 999);
 
+    // Save payment
     $payment->save();
   }
 
@@ -166,6 +172,40 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
    */
   protected function doRefundPayment() {
     // TODO: Implement doRefundPayment() method.
+  }
+
+
+  /**
+   * @param $payment_data
+   * @param $secret_key
+   * @return string
+   */
+  protected function generateShaIN($payment_data, $secret_key) {
+    $string = null;
+
+    // Sort array in alphabetical order by key.
+    ksort($payment_data);
+
+    foreach ($payment_data as $key => $value) {
+      if (!empty($value)) {
+        $string .= $key . '=' . $value . $secret_key;
+      }
+    }
+
+    return strtoupper(sha1($string));
+  }
+
+  /**
+   * @param $amount
+   * @param $subunits
+   * @return int
+   */
+  protected function calculateAmount($amount, $subunits) {
+    if ($subunits == 0) {
+      return intval($amount);
+    }
+
+    return intval($amount * $subunits);
   }
 
 }
