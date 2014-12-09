@@ -77,8 +77,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   public function defaultConfiguration() {
     return parent::defaultConfiguration() + array(
       'pspid' => 'drupalDEMO',
-      'pspid_password' => '6BR1M/oA{u',
-      'security_key' => '',
+      'security_key' => 'Mysecretsig1875!?',
     );
   }
 

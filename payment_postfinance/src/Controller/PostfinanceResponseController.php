@@ -9,6 +9,7 @@ namespace Drupal\payment_postfinance\Controller;
 use Drupal\currency\Entity\Currency;
 use Drupal\payment\Entity\Payment;
 use Drupal\payment\Entity\PaymentInterface;
+use Drupal\payment_postfinance\PostfinanceHelper;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -33,17 +34,24 @@ class PostfinanceResponseController {
     /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
     $currency = Currency::load($payment->getCurrencyCode());
 
+    // Generator used for url generation.
+    $generator = \Drupal::urlGenerator();
+
     // Payment Data.
     $payment_data = array(
-      'orderID' => $payment->id(),
-      'amount' => intval($payment->getamount() * $currency->getSubunits()),
-      'currency' => $payment->getCurrencyCode(),
-      'pspid' => $plugin_definition['pspid'],
-      'security_key' => $plugin_definition['security_key'],
+      'PSPID' => $plugin_definition['pspid'],
+      'ORDERID' => $payment->id(),
+      'AMOUNT' => PostfinanceHelper::calculateAmount($payment->getAmount(), $currency->getSubunits()),
+      'CURRENCY' => $payment->getCurrencyCode(),
+      'LANGUAGE' => $plugin_definition['LANGUAGE'],
+      'ACCEPTURL' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'DECLINEURL' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'EXCEPTIONURL' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $payment->id()), array('absolute' => TRUE)),
+      'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
     );
 
     // Generate local SHASign.
-    $payment_data['SHASign'] = strtoupper(sha1($payment_data['orderID'] . $payment_data['amount'] . $payment_data['currency'] . $payment_data['pspid'] . $payment_data['security_key']));
+    $payment_data['SHASign'] = PostfinanceHelper::generateShaIN($payment_data, $plugin_definition['security_key']);
 
     // Check correctly generated SHASign
     if (!$payment_data['SHASign'] == $request->get('SHASIGN')) {
