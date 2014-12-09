@@ -68,6 +68,7 @@ class PostfinancePaymentTest extends WebTestBase {
       'name' => 'Article'
     ));
 
+    // Adds the payment field to the node
     $this->addPaymentFormField($node_type);
 
     // Create article node
@@ -89,7 +90,7 @@ class PostfinancePaymentTest extends WebTestBase {
       'title' => $title,
     ));
 
-    // Create user with correct permission.
+    // Create user with correct permission and login.
     $this->admin_user = $this->drupalCreateUser(array(
       'payment.payment_method_configuration.view.any',
       'payment.payment_method_configuration.update.any',
@@ -115,13 +116,6 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Load payment configuration
     $payment_config = \Drupal::config('payment_postfinance.settings');
-
-    // @todo: Can plugin configuration be used for testing?
-//    // Retrieve plugin configuration holds the payment data.
-//    $plugin_configuration = $this->node->{$this->field_name}->plugin_configuration;
-//
-//    // Postfinance payment method configuration values.
-//    $postfinance_payment_method_configuration = entity_load('payment_method_configuration', 'postfinance_payment_form')->getPluginConfiguration();
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
@@ -239,26 +233,6 @@ class PostfinancePaymentTest extends WebTestBase {
     $base_amount = $amount * $quantity;
     $currency = Currency::load($currency_code);
     return intval($base_amount * $currency->getSubunits());
-  }
-
-  /**
-   * Generates the sign
-   *
-   * @param $hmac_key
-   *  hmac key
-   * @param $merchant_id
-   *  Merchant ID
-   * @param $identifier
-   * @param $amount
-   *  The order amount
-   * @param $currency
-   *  Currency Code
-   * @return string
-   *  Returns the sign
-   */
-  function generateSign($hmac_key, $merchant_id, $identifier, $amount, $currency) {
-    $hmac_data = $merchant_id . $amount . $currency . $identifier;
-    return hash_hmac('md5', $hmac_data, pack('H*', $hmac_key));
   }
 
   /**
