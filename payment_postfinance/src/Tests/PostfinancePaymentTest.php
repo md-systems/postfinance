@@ -128,7 +128,7 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->assertText('AMOUNT246');
     $this->assertText('CURRENCYXXX');
     $this->assertText('LANGUAGEen_US');
-    $this->assertText('SHASignC40EF94C09068102C6A5AFF9605D2927B1F3F3A8');
+    $this->assertText('SHASignE5CED4AA85915279F55A517AC42E21067CAB0AF5');
 
     // Finish payment
     $this->drupalPostForm(NULL, array(), t('Submit'));

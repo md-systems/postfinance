@@ -43,7 +43,7 @@ class PostfinanceResponseController {
       'ORDERID' => $payment->id(),
       'AMOUNT' => PostfinanceHelper::calculateAmount($payment->getAmount(), $currency->getSubunits()),
       'CURRENCY' => $payment->getCurrencyCode(),
-      'LANGUAGE' => $plugin_definition['LANGUAGE'],
+      'LANGUAGE' => $plugin_definition['language'],
       'ACCEPTURL' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $payment->id()), array('absolute' => TRUE)),
       'DECLINEURL' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $payment->id()), array('absolute' => TRUE)),
       'EXCEPTIONURL' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $payment->id()), array('absolute' => TRUE)),
