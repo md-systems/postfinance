@@ -65,7 +65,8 @@ class PostfinancePaymentFormDeriver extends DeriverBase implements ContainerDeri
         $this->derivatives[$payment_method->id()] = array(
             //'active' => $payment_method->status(),
             'pspid' => $configuration_plugin->getPSPID(),
-            'security_key' => $configuration_plugin->getSecurityKey(),
+            'sha_in_key' => $configuration_plugin->getShaInKey(),
+            'sha_out_key' => $configuration_plugin->getShaOutKey(),
             'language' => $configuration_plugin->getLanguage(),
           ) + $base_plugin_definition;
       }

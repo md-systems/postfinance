@@ -77,7 +77,8 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   public function defaultConfiguration() {
     return parent::defaultConfiguration() + array(
       'pspid' => 'drupalDEMO',
-      'security_key' => 'Mysecretsig1875!?',
+      'sha_in_key' => 'Mysecretsig1875!?',
+      'sha_out_key' => 'ShaOUTpassphrase123!?',
     );
   }
 
@@ -99,11 +100,11 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   }
 
   /**
-   * @param $psid_password
+   * @param $sha_in_key
    * @return $this
    */
-  public function setPSPIDPassword($psid_password) {
-    $this->configuration['pspid_password'] = $psid_password;
+  public function setShaInKey($sha_in_key) {
+    $this->configuration['sha_in_key'] = $sha_in_key;
 
     return $this;
   }
@@ -111,16 +112,16 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   /**
    * @return mixed
    */
-  public function getPSPIDPassword() {
-    return $this->configuration['pspid_password'];
+  public function getShaInKey() {
+    return $this->configuration['sha_in_key'];
   }
 
   /**
-   * @param $security_key
+   * @param $sha_out_key
    * @return $this
    */
-  public function setSecurityKey($security_key) {
-    $this->configuration['security_key'] = $security_key;
+  public function setShaOutKey($sha_out_key) {
+    $this->configuration['sha_out_key'] = $sha_out_key;
 
     return $this;
   }
@@ -128,8 +129,8 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   /**
    * @return mixed
    */
-  public function getSecurityKey() {
-    return $this->configuration['security_key'];
+  public function getShaOutKey() {
+    return $this->configuration['sha_out_key'];
   }
 
   /**
@@ -163,11 +164,18 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
       '#default_value' => $this->getPSPID(),
     );
 
-    $form['security_key'] = array(
+    $form['sha_in_key'] = array(
       '#type' => 'textfield',
-      '#title' => $this->t('Secret Key'),
-      '#description' => 'Secret key to generate an unique character string for order data validation.',
-      '#default_value' => $this->getSecurityKey(),
+      '#title' => $this->t('SHA-IN Security pass phrase'),
+      '#description' => 'Security pass phrase for validation on Postfinance page',
+      '#default_value' => $this->getShaInKey(),
+    );
+
+    $form['sha_out_key'] = array(
+      '#type' => 'textfield',
+      '#title' => $this->t('SHA-OUT Security pass phrase'),
+      '#description' => 'Security pass phrase for response validation.',
+      '#default_value' => $this->getShaOutKey(),
     );
 
     // @TODO: Add more languages
@@ -181,6 +189,8 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
       '#default_value' => $this->getLanguage(),
     );
 
+    // @TODO: Create production and testing option.
+
     return $form;
   }
 
@@ -193,7 +203,8 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
     $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);
 
     $this->setPSPID($values['pspid']);
-    $this->setSecurityKey($values['security_key']);
+    $this->setShaInKey($values['sha_in_key']);
+    $this->setShaOutKey($values['sha_out_key']);
     $this->setLanguage($values['language']);
   }
 

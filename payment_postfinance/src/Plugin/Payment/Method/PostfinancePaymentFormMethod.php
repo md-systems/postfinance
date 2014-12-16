@@ -117,11 +117,8 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
       'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
     );
 
-    // Filter array for empty values
-    array_filter($payment_data);
-
     // Generate the SHASign.
-    $payment_data['SHASign'] = PostfinanceHelper::generateShaIN($payment_data, $this->pluginDefinition['security_key']);
+    $payment_data['SHASign'] = PostfinanceHelper::generateShaIN($payment_data, $this->pluginDefinition['sha_in_key']);
 
     // Generate payment link with correct query.
     $payment_link = Url::fromUri($payment_config->get('payment_link'), array(

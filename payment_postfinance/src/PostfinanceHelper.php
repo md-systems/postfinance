@@ -21,10 +21,13 @@ class PostfinanceHelper {
     $string = null;
 
     // Sort array in alphabetical order by key.
+    $payment_data = array_change_key_case($payment_data, CASE_UPPER);
     ksort($payment_data);
 
+    unset($payment_data['SHASIGN']);
+
     foreach ($payment_data as $key => $value) {
-      if (!empty($value)) {
+      if (isset($value)) {
         $string .= $key . '=' . $value . $secret_key;
       }
     }

@@ -31,36 +31,23 @@ class PostfinanceResponseController {
     // The definition of the plugin implementation.
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
-    /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
-    $currency = Currency::load($payment->getCurrencyCode());
-
-    // Generator used for url generation.
-    $generator = \Drupal::urlGenerator();
-
-    // Payment Data.
-    $payment_data = array(
-      'PSPID' => $plugin_definition['pspid'],
-      'ORDERID' => $payment->id(),
-      'AMOUNT' => PostfinanceHelper::calculateAmount($payment->getAmount(), $currency->getSubunits()),
-      'CURRENCY' => $payment->getCurrencyCode(),
-      'LANGUAGE' => $plugin_definition['language'],
-      'ACCEPTURL' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $payment->id()), array('absolute' => TRUE)),
-      'DECLINEURL' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $payment->id()), array('absolute' => TRUE)),
-      'EXCEPTIONURL' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $payment->id()), array('absolute' => TRUE)),
-      'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
-    );
-
     // Generate local SHASign.
-    $payment_data['SHASign'] = PostfinanceHelper::generateShaIN($payment_data, $plugin_definition['security_key']);
+    $sha_sign = PostfinanceHelper::generateShaIN($request->query->all(), $plugin_definition['sha_out_key']);
 
     // Check correctly generated SHASign
-    if (!$payment_data['SHASign'] == $request->get('SHASIGN')) {
+    debug($sha_sign, 'generated sign');
+    debug($request->query->all(), 'all request data');
+
+    if ($sha_sign == $request->get('SHASIGN')) {
+      drupal_set_message(t('Payment succesfull.'), 'error');
+      $this->savePayment($payment, 'payment_success');
+    } else {
       $this->savePayment($payment, 'payment_failed');
       \Drupal::logger(t('Payment verification failed: @error'),array('@error' => 'SHASign did not equal'))->warning('PostfinanceResponseController.php');
       drupal_set_message(t('Payment verification failed: @error.', array('@error' => 'Verification code incorrect')), 'error');
     }
 
-    $this->savePayment($payment, 'payment_success');
+
   }
 
   /**

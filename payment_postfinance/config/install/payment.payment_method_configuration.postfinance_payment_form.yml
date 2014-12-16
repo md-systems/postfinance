@@ -5,7 +5,8 @@ pluginConfiguration:
   message_text: ''
   message_text_format: plain_text
   pspid: drupalDEMO
-  security_key: 'Mysecretsig1875!?'
+  sha_in_key: 'Mysecretsig1875!?'
+  sha_out_key: 'ShaOUTpassphrase123!?'
   language: 'en_US'
 pluginId: payment_postfinance_payment_form
 status: true
