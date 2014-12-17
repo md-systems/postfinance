@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\payment_postfinance_test\Form\PostfinanceTestForm.
+ * Contains \Drupal\payment_postfinance\Tests\modules\payment_postfinance_test\Form\PostfinanceTestForm.
  */
 
 namespace Drupal\payment_postfinance_test\Form;
@@ -58,7 +58,7 @@ class PostfinanceTestForm extends FormBase {
       'NCERROR' => 0,
       'BRAND' => 'VISA',
     );
-    
+
     // Generate SHA-OUT signature
     $callback_parameters['SHASIGN'] = PostfinanceHelper::generateShaSign($callback_parameters, $plugin_definition['sha_out_key']);
 
