@@ -42,6 +42,9 @@ class PostfinanceTestForm extends FormBase {
     // Load payment method configuration.
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
+    // Callback status
+    $callback_status = \Drupal::state()->get('postfinance.callback_status');
+
     // Generate the callback parameters to be send back.
     $callback_parameters = array(
       'ORDERID' => $request->query->get('ORDERID'),
@@ -49,13 +52,13 @@ class PostfinanceTestForm extends FormBase {
       'CURRENCY' => $request->query->get('CURRENCY'),
       'PM' => 'CreditCard',
       'ACCEPTANCE' => 'test123',
-      'STATUS' => 5,
+      'STATUS' => (empty($callback_status) ? 5 : $callback_status),
       'CARDNO' => 'XXXXXXXXXXXX1111',
       'PAYID' => 1136745,
       'NCERROR' => 0,
       'BRAND' => 'VISA',
     );
-
+    
     // Generate SHA-OUT signature
     $callback_parameters['SHASIGN'] = PostfinanceHelper::generateShaSign($callback_parameters, $plugin_definition['sha_out_key']);
 

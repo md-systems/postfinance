@@ -3,6 +3,6 @@ core: 8.x
 dependencies:
   - payment_postfinance
 name: Payment Postfinance testing
-package: Postfinance
+package: Payment
 hidden: true
 type: module

@@ -59,22 +59,22 @@ class PostfinancePaymentTest extends WebTestBase {
   protected function setUp() {
     parent::setUp();
 
-    // Create a field name
+    // Create a field name.
     $this->field_name = strtolower($this->randomMachineName());
 
-    // Create article content type
+    // Create article content type.
     $node_type = $this->drupalCreateContentType(array(
       'type' => 'article',
       'name' => 'Article'
     ));
 
-    // Adds the payment field to the node
+    // Adds the payment field to the node.
     $this->addPaymentFormField($node_type);
 
-    // Create article node
+    // Create article node.
     $title = $this->randomMachineName();
 
-    // Create node with payment plugin configuration
+    // Create node with payment plugin configuration.
     $this->node = $this->drupalCreateNode(array(
       'type' => 'article',
       $this->field_name => array(
@@ -103,7 +103,7 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Set payment link to test mode
     $payment_config = \Drupal::config('payment_postfinance.settings');
-    $payment_config->set('payment_link', $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
+    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
     $payment_config->save();
   }
 
@@ -111,17 +111,17 @@ class PostfinancePaymentTest extends WebTestBase {
    * Tests accept Postfinance payment.
    */
   function testPostfinanceAcceptPayment() {
-    // Set payment to accept
+    // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'ACCEPT');
     \Drupal::state()->set('postfinance.testing', TRUE);
 
-    // Load payment configuration
+    // Load payment configuration.
     $payment_config = \Drupal::config('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
-    // Create saferpay payment
+    // Create saferpay payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
     $this->assertText('PSPIDdrupalDEMO');
@@ -131,10 +131,10 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->assertText('LANGUAGEen_US');
     $this->assertText('SHASignE5CED4AA85915279F55A517AC42E21067CAB0AF5');
 
-    // Finish payment
+    // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
 
-    // Check if payment was succesfully created
+    // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
     $this->assertNoText('Failed');
     $this->assertText('pay me man');
@@ -146,23 +146,26 @@ class PostfinancePaymentTest extends WebTestBase {
   /**
    * Tests declining Postfinance payment.
    */
-  function atestPostfinanceDeclinePayment() {
-    // Set payment to accept
+  function testPostfinanceDeclinePayment() {
+    // Set callback status to decline payment.
+    \Drupal::state()->set('postfinance.callback_status', 2);
+
+    // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'DECLINE');
 
-    // Load payment configuration
+    // Load payment configuration.
     $payment_config = \Drupal::config('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
-    // Create saferpay payment
+    // Create saferpay payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
-    // Finish payment
+    // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
 
-    // Check if payment was succesfully created
+    // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
     $this->assertNoText('Completed');
     $this->assertText('Failed');
@@ -171,23 +174,26 @@ class PostfinancePaymentTest extends WebTestBase {
   /**
    * Tests exception Postfinance payment.
    */
-  function atestPostfinanceExceptionPayment() {
-    // Set payment to accept
+  function testPostfinanceExceptionPayment() {
+    // Set callback status to decline payment.
+    \Drupal::state()->set('postfinance.callback_status', 52);
+
+    // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'EXCEPTION');
 
-    // Load payment configuration
+    // Load payment configuration.
     $payment_config = \Drupal::config('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
-    // Create saferpay payment
+    // Create saferpay payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
-    // Finish payment
+    // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
 
-    // Check if payment was succesfully created
+    // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
     $this->assertNoText('Completed');
     $this->assertText('Failed');
@@ -196,30 +202,33 @@ class PostfinancePaymentTest extends WebTestBase {
   /**
    * Tests cancel Postfinance payment.
    */
-  function atestPostfinanceCancelPayment() {
-    // Set payment to accept
+  function testPostfinanceCancelPayment() {
+    // Set callback status to decline payment.
+    \Drupal::state()->set('postfinance.callback_status', 1);
+
+    // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'CANCEL');
 
-    // Load payment configuration
+    // Load payment configuration.
     $payment_config = \Drupal::config('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
-    // Create saferpay payment
+    // Create saferpay payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
-    // Finish payment
+    // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
 
-    // Check if payment was succesfully created
+    // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
     $this->assertNoText('Completed');
     $this->assertText('Cancelled');
   }
 
   /**
-   * Calculates the total amount
+   * Calculates the total amount.
    *
    * @param $amount
    *  Base amount
@@ -237,7 +246,7 @@ class PostfinancePaymentTest extends WebTestBase {
   }
 
   /**
-   * Adds the payment field to the node
+   * Adds the payment field to the node.
    *
    * @param NodeTypeInterface $type
    *   Node type interface type
