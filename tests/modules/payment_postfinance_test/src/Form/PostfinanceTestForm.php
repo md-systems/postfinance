@@ -12,7 +12,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\payment\Entity\Payment;
 use Drupal\payment_postfinance\PostfinanceHelper;
-use Drupal\taxonomy\TermInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

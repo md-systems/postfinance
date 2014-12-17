@@ -9,7 +9,6 @@ namespace Drupal\payment_postfinance\Tests;
 
 use Drupal\Core\Url;
 use Drupal\currency\Entity\Currency;
-use Drupal\field\Entity\FieldInstanceConfig;
 use Drupal\node\NodeTypeInterface;
 use Drupal\simpletest\WebTestBase;
 
