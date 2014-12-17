@@ -113,6 +113,7 @@ class PostfinancePaymentTest extends WebTestBase {
   function testPostfinanceAcceptPayment() {
     // Set payment to accept
     \Drupal::state()->set('postfinance.return_url_key', 'ACCEPT');
+    \Drupal::state()->set('postfinance.testing', TRUE);
 
     // Load payment configuration
     $payment_config = \Drupal::config('payment_postfinance.settings');

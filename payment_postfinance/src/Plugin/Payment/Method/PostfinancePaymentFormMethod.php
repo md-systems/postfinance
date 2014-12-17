@@ -96,9 +96,7 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
   protected function doExecutePayment() {
     /** @var \Drupal\payment\Entity\PaymentInterface $payment */
     $payment = $this->getPayment();
-
     $generator = \Drupal::urlGenerator();
-
     $payment_config = \Drupal::config('payment_postfinance.settings');
 
     /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
@@ -117,8 +115,8 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
       'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
     );
 
-    // Generate the SHASign.
-    $payment_data['SHASign'] = PostfinanceHelper::generateShaIN($payment_data, $this->pluginDefinition['sha_in_key']);
+    // Generate SHA-IN signature
+    $payment_data['SHASign'] = PostfinanceHelper::generateShaSign($payment_data, $this->pluginDefinition['sha_in_key']);
 
     // Generate payment link with correct query.
     $payment_link = Url::fromUri($payment_config->get('payment_link'), array(

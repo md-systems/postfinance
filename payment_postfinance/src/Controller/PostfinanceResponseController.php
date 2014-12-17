@@ -32,11 +32,10 @@ class PostfinanceResponseController {
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
     // Generate local SHASign.
-    $sha_sign = PostfinanceHelper::generateShaIN($request->query->all(), $plugin_definition['sha_out_key']);
+    $request_values = $request->query->all();
 
-    // Check correctly generated SHASign
-    debug($sha_sign, 'generated sign');
-    debug($request->query->all(), 'all request data');
+    // Generate SHA-OUT signature
+    $sha_sign = PostfinanceHelper::generateShaSign($request_values, $plugin_definition['sha_out_key']);
 
     if ($sha_sign == $request->get('SHASIGN')) {
       drupal_set_message(t('Payment succesfull.'), 'error');
@@ -46,7 +45,6 @@ class PostfinanceResponseController {
       \Drupal::logger(t('Payment verification failed: @error'),array('@error' => 'SHASign did not equal'))->warning('PostfinanceResponseController.php');
       drupal_set_message(t('Payment verification failed: @error.', array('@error' => 'Verification code incorrect')), 'error');
     }
-
 
   }
 

@@ -9,7 +9,9 @@ namespace Drupal\payment_postfinance_test\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\payment\Entity\Payment;
+use Drupal\payment_postfinance\PostfinanceHelper;
 use Drupal\taxonomy\TermInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -52,22 +54,16 @@ class PostfinanceTestForm extends FormBase {
       'PAYID' => 1136745,
       'NCERROR' => 0,
       'BRAND' => 'VISA',
-      'SHASIGN' => strtoupper(sha1($request->query->get('ORDERID') .
-        $request->query->get('AMOUNT') . $request->query->get('CURRENCY') .
-        $request->query->get('PSPID') . $plugin_definition['security_key'])),
     );
 
-    // Loop trough the callback parameters and put them in hidden fields to be send.
-    foreach ($callback_parameters as $key => $value) {
-      $form[$key] = array(
-        '#type' => 'hidden',
-        '#value' => $value,
-      );
-    }
+    // Generate SHA-OUT signature
+    $callback_parameters['SHASIGN'] = PostfinanceHelper::generateShaSign($callback_parameters, $plugin_definition['sha_out_key']);
 
-    // Generate the route by getting the return url key.
+    // Generate payment link with correct callback query parameters.
     $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'ACCEPT';
-    $response_url = $request->query->get($response_url_key . 'URL');
+    $response_url = Url::fromUri($request->query->get($response_url_key . 'URL'), array(
+      'query' => $callback_parameters,
+    ))->toString();
 
     // Complete the form.
     $form['#action'] = $response_url;
