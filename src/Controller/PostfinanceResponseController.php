@@ -11,6 +11,7 @@ use Drupal\payment\Entity\Payment;
 use Drupal\payment\Entity\PaymentInterface;
 use Drupal\payment_postfinance\PostfinanceHelper;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Postfinance response controller.
