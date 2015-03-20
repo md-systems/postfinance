@@ -103,7 +103,6 @@ class PostfinancePaymentTest extends WebTestBase {
     // Set payment link to test mode
     $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings')->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
     $payment_config->save();
-    debug($payment_config->get());
   }
 
   /**
