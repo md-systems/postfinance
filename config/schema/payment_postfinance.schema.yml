@@ -1,0 +1,25 @@
+payment.plugin_configuration.payment_method_configuration.payment_postfinance_payment_form:
+  type: payment.plugin_configuration.payment_method_configuration.payment_base
+  mapping:
+    status:
+      type: string
+      label: Target status
+    pspid:
+      type: string
+      label: Postfinance ID
+    sha_in_key:
+      type: string
+      label: SHA_in key
+    sha_out_key:
+      type: string
+      label: SHA_out key
+    language:
+      type: string
+      label: Language
+payment_postfinance.settings:
+  type: mapping
+  label: Postfinance settings
+  mapping:
+    payment_link:
+      type: string
+      label: Payment link

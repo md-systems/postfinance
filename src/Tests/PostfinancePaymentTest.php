@@ -82,7 +82,7 @@ class PostfinancePaymentTest extends WebTestBase {
           'name' => 'payment_basic',
           'quantity' => '2',
           'amount' => '123',
-          'description' => 'pay me man',
+          'description' => 'Payment description',
         ),
         'plugin_id' => 'payment_basic',
       ),
@@ -101,9 +101,9 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->drupalLogin($this->admin_user);
 
     // Set payment link to test mode
-    $payment_config = \Drupal::config('payment_postfinance.settings');
-    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings')->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
     $payment_config->save();
+    debug($payment_config->get());
   }
 
   /**
@@ -136,7 +136,7 @@ class PostfinancePaymentTest extends WebTestBase {
     // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
     $this->assertNoText('Failed');
-    $this->assertText('pay me man');
+    $this->assertText('Payment description');
     $this->assertText('XXX 123.00');
     $this->assertText('XXX 246.00');
     $this->assertText('Completed');
@@ -272,7 +272,7 @@ class PostfinancePaymentTest extends WebTestBase {
     $instance->save();
 
     // Assign display settings for the 'default' and 'teaser' view modes.
-    entity_get_display('node', $type->type, 'default')
+    entity_get_display('node', $type->id(), 'default')
       ->setComponent($this->field_name, array(
         'label' => 'hidden',
         'type' => 'text_default',

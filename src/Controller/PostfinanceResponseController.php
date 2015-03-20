@@ -28,6 +28,8 @@ class PostfinanceResponseController {
    *   Request
    * @param \Drupal\payment\Entity\PaymentInterface $payment
    *   The Payment Entity type.
+   *
+   * @return \Symfony\Component\HttpFoundation\Response
    */
   public function processAcceptResponse(Request $request, PaymentInterface $payment) {
     // The definition of the plugin implementation.
@@ -41,11 +43,11 @@ class PostfinanceResponseController {
 
     if ($sha_sign == $request->get('SHASIGN')) {
       drupal_set_message(t('Payment succesfull.'), 'error');
-      $this->savePayment($payment, 'payment_success');
+      return $this->savePayment($payment, 'paymet_success');
     } else {
-      $this->savePayment($payment, 'payment_failed');
       \Drupal::logger(t('Payment verification failed: @error'),array('@error' => 'SHASign did not equal'))->warning('PostfinanceResponseController.php');
       drupal_set_message(t('Payment verification failed: @error.', array('@error' => 'Verification code incorrect')), 'error');
+      return $this->savePayment($payment, 'payment_failed');
     }
 
   }
@@ -60,13 +62,13 @@ class PostfinanceResponseController {
    *   Request
    * @param \Drupal\payment\Entity\PaymentInterface $payment
    *   The Payment Entity type.
+   * @return \Symfony\Component\HttpFoundation\Response
    */
   public function processDeclineResponse(Request $request, PaymentInterface $payment) {
-    $this->savePayment($payment, 'payment_failed');
-
     $message = 'Postfinance communication declined. Invalid data received from Postfinance.';
     \Drupal::logger('postfinance')->error('Processing declined with exception @e.', array('@e' => $message));
     drupal_set_message(t('Payment processing declined.'), 'error');
+    return $this->savePayment($payment, 'payment_failed');
   }
 
   /**
@@ -100,27 +102,29 @@ class PostfinanceResponseController {
    *   Request
    * @param \Drupal\payment\Entity\PaymentInterface $payment
    *   The Payment Entity type.
+   * @return \Symfony\Component\HttpFoundation\Response
    */
   public function processCancelResponse(Request $request, PaymentInterface $payment) {
-    $this->savePayment($payment, 'payment_cancelled');
-
     $message = 'Postfinance communication cancelled. Payment cancelled';
     \Drupal::logger('postfinance')->error('Processing failed with exception @e.', array('@e' => $message));
     drupal_set_message(t('Payment processing cancelled.'), 'error');
+    return $this->savePayment($payment, 'payment_cancelled');
   }
 
   /**
    * Saves the payment.
    *
    * @param \Drupal\payment\Entity\PaymentInterface $payment
-   *  Payment Interface.
+   *  Payment entity.
    * @param string $status
-   *  Payment Status
+   *  Payment status to set
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
    */
   public function savePayment(PaymentInterface $payment, $status) {
     $payment->setPaymentStatus(\Drupal::service('plugin.manager.payment.status')
       ->createInstance($status));
     $payment->save();
-    $payment->getPaymentType()->resumeContext();
+    return $payment->getPaymentType()->getResumeContextResponse();
   }
 }
