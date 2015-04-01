@@ -7,6 +7,8 @@
 namespace Drupal\payment_postfinance\Controller;
 
 use Drupal\currency\Entity\Currency;
+use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Utility\Crypt;
 use Drupal\payment\Entity\Payment;
 use Drupal\payment\Entity\PaymentInterface;
 use Drupal\payment_postfinance\PostfinanceHelper;

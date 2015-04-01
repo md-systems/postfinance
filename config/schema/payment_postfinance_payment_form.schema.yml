@@ -1,0 +1,22 @@
+payment.plugin_configuration.payment_method_configuration.payment_postfinance_payment_form:
+  type: payment.plugin_configuration.payment_method_configuration.payment_base
+  mapping:
+    pspid:
+      type: string
+      label: Postfinance Payment ID
+    sha_in_key:
+      type: string
+      label: SHA In Key
+    sha_out_key:
+      type: string
+      label: SHA Out Key
+    language:
+      type: integer
+      label: Language
+payment_postfinance.settings:
+  type: mapping
+  label: Saferpay settings
+  mapping:
+    payment_link:
+      type: string
+      label: Payment link

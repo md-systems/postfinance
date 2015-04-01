@@ -7,6 +7,8 @@
 
 namespace Drupal\payment_postfinance_test\Form;
 
+use Drupal\Component\Utility\Crypt;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
@@ -83,7 +85,7 @@ class PostfinanceTestForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    drupal_set_message("Form submitted");
+    drupal_set_message("Validate Form");
   }
 
 }

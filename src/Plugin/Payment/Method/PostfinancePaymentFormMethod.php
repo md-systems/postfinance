@@ -102,11 +102,13 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
     $currency = Currency::load($payment->getCurrencyCode());
 
+    debug($payment);
+
     // Payment data to be send to Postfinance.
     $payment_data = array(
       'PSPID' => $this->pluginDefinition['pspid'],
       'ORDERID' => $payment->id(),
-      'AMOUNT' => PostfinanceHelper::calculateAmount($payment->getAmount(), $currency->getSubunits()),
+      'AMOUNT' => intval($payment->getAmount() * $currency->getSubunits()),
       'CURRENCY' => $payment->getCurrencyCode(),
       'LANGUAGE' => $this->pluginDefinition['language'],
       'ACCEPTURL' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $payment->id()), array('absolute' => TRUE)),

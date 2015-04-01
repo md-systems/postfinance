@@ -78,11 +78,11 @@ class PostfinancePaymentTest extends WebTestBase {
       'type' => 'article',
       $this->field_name => array(
         'plugin_configuration' => array(
-          'currency_code' => 'XXX',
+          'currency_code' => 'CHF',
           'name' => 'payment_basic',
           'quantity' => '2',
           'amount' => '123',
-          'description' => 'pay me man',
+          'description' => 'Payment Description',
         ),
         'plugin_id' => 'payment_basic',
       ),
@@ -101,7 +101,7 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->drupalLogin($this->admin_user);
 
     // Set payment link to test mode
-    $payment_config = \Drupal::config('payment_postfinance.settings');
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
     $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
     $payment_config->save();
   }
@@ -115,11 +115,10 @@ class PostfinancePaymentTest extends WebTestBase {
     \Drupal::state()->set('postfinance.testing', TRUE);
 
     // Load payment configuration.
-    $payment_config = \Drupal::config('payment_postfinance.settings');
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
-
     // Create saferpay payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
@@ -136,9 +135,9 @@ class PostfinancePaymentTest extends WebTestBase {
     // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
     $this->assertNoText('Failed');
-    $this->assertText('pay me man');
-    $this->assertText('XXX 123.00');
-    $this->assertText('XXX 246.00');
+    $this->assertText('Payment Description');
+    $this->assertText('CHF 123.00');
+    $this->assertText('CHF 246.00');
     $this->assertText('Completed');
   }
 
@@ -227,24 +226,6 @@ class PostfinancePaymentTest extends WebTestBase {
   }
 
   /**
-   * Calculates the total amount.
-   *
-   * @param $amount
-   *  Base amount
-   * @param $quantity
-   *  Quantity
-   * @param $currency_code
-   *  Currency code
-   * @return int
-   *  Returns the total amount
-   */
-  function calculateAmount($amount, $quantity, $currency_code) {
-    $base_amount = $amount * $quantity;
-    $currency = Currency::load($currency_code);
-    return intval($base_amount * $currency->getSubunits());
-  }
-
-  /**
    * Adds the payment field to the node.
    *
    * @param NodeTypeInterface $type
@@ -267,12 +248,12 @@ class PostfinancePaymentTest extends WebTestBase {
       'field_storage' => $field_storage,
       'bundle' => $type->id(),
       'label' => $label,
-      'settings' => array('currency_code' => 'XXX'),
+      'settings' => array('currency_code' => 'CHF'),
     ));
     $instance->save();
 
     // Assign display settings for the 'default' and 'teaser' view modes.
-    entity_get_display('node', $type->type, 'default')
+    entity_get_display('node', $type->id(), 'default')
       ->setComponent($this->field_name, array(
         'label' => 'hidden',
         'type' => 'text_default',
