@@ -34,60 +34,19 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class PostfinancePaymentFormMethod extends PaymentMethodBase implements ContainerFactoryPluginInterface, ConfigurablePluginInterface {
 
-  /**
-   * The payment status manager.
+   /**
+   * Stores a configuration.
    *
-   * @var \Drupal\payment\Plugin\Payment\Status\PaymentStatusManagerInterface
-   */
-  protected $paymentStatusManager;
-
-  /**
-   * Constructs a new class instance.
+   * @param string $key
+   *   Configuration key.
+   * @param mixed $value
+   *   Configuration value.
    *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param array $plugin_definition
-   *   The plugin implementation definition.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
-   *   The event dispatcher.
-   * @param \Drupal\Core\Utility\Token $token
-   *   The token API.
-   * @param \Drupal\payment\Plugin\Payment\Status\PaymentStatusManager $payment_status_manager
-   *   The payment status manager.
+   * @return $this
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ModuleHandlerInterface $module_handler, EventDispatcherInterface $event_dispatcher, Token $token, ModuleHandlerInterface $module_handler, PaymentStatusManager $payment_status_manager) {
-    $configuration += $this->defaultConfiguration();
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $module_handler, $event_dispatcher, $token, $module_handler);
-    $this->paymentStatusManager = $payment_status_manager;
-
-    $this->pluginDefinition['message_text'] = '';
-    $this->pluginDefinition['message_text_format'] = '';
-  }
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('module_handler'),
-      $container->get('event_dispatcher'),
-      $container->get('token'),
-      $container->get('module_handler'),
-      $container->get('plugin.manager.payment.status')
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getOperations($plugin_id) {
-    return array();
+  public function setConfigField($key, $value) {
+    $this->configuration[$key] = $value;
+    return $this;
   }
 
   /**
@@ -97,12 +56,9 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     /** @var \Drupal\payment\Entity\PaymentInterface $payment */
     $payment = $this->getPayment();
     $generator = \Drupal::urlGenerator();
-    $payment_config = \Drupal::config('payment_postfinance.settings');
 
     /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
     $currency = Currency::load($payment->getCurrencyCode());
-
-    debug($payment);
 
     // Payment data to be send to Postfinance.
     $payment_data = array(
@@ -121,9 +77,10 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     $payment_data['SHASign'] = PostfinanceHelper::generateShaSign($payment_data, $this->pluginDefinition['sha_in_key']);
 
     // Generate payment link with correct query.
-    $payment_link = Url::fromUri($payment_config->get('payment_link'), array(
+    $payment_link = (Url::fromUri($this->pluginDefinition['payment_link'], array(
+      'absolute' => TRUE,
       'query' => $payment_data,
-    ))->toString();
+    )));
 
     // Redirect to generated payment link.
     $response = new RedirectResponse($payment_link);
@@ -142,34 +99,6 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
    */
   protected function getSupportedCurrencies() {
     return TRUE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function doCapturePaymentAccess(AccountInterface $account) {
-    // TODO: Implement doCapturePaymentAccess() method.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function doCapturePayment() {
-    // TODO: Implement doCapturePayment() method.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function doRefundPaymentAccess(AccountInterface $account) {
-    // TODO: Implement doRefundPaymentAccess() method.
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function doRefundPayment() {
-    // TODO: Implement doRefundPayment() method.
   }
 
 }

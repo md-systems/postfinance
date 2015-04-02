@@ -15,7 +15,7 @@ payment.plugin_configuration.payment_method_configuration.payment_postfinance_pa
       label: Language
 payment_postfinance.settings:
   type: mapping
-  label: Saferpay settings
+  label: Postfinance settings
   mapping:
     payment_link:
       type: string

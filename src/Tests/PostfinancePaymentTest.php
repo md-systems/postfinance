@@ -7,8 +7,12 @@
 
 namespace Drupal\payment_postfinance\Tests;
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Url;
+use Drupal\Core\Form\ConfigFormBase;
 use Drupal\currency\Entity\Currency;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\NodeTypeInterface;
 use Drupal\simpletest\WebTestBase;
 
@@ -67,6 +71,10 @@ class PostfinancePaymentTest extends WebTestBase {
       'name' => 'Article'
     ));
 
+    // Import the curreny configuration
+    $config_importer = \Drupal::service('currency.config_importer');
+    $config_importer->importCurrency('CHF');
+
     // Adds the payment field to the node.
     $this->addPaymentFormField($node_type);
 
@@ -80,6 +88,7 @@ class PostfinancePaymentTest extends WebTestBase {
         'plugin_configuration' => array(
           'currency_code' => 'CHF',
           'name' => 'payment_basic',
+          'payment_id' => NULL,
           'quantity' => '2',
           'amount' => '123',
           'description' => 'Payment Description',
@@ -107,7 +116,7 @@ class PostfinancePaymentTest extends WebTestBase {
   }
 
   /**
-   * Tests accept Postfinance payment.
+   * This function tests accepting a Postfinance payment.
    */
   function testPostfinanceAcceptPayment() {
     // Set payment to accept.
@@ -115,22 +124,37 @@ class PostfinancePaymentTest extends WebTestBase {
     \Drupal::state()->set('postfinance.testing', TRUE);
 
     // Load payment configuration.
-    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
+    $payment_config = \Drupal::config('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
-    // Create saferpay payment.
+
+    // Modifies the postfinance configuration for testing purposes.
+    $postfinance_configuration = array(
+      'plugin_form[pspid]' => 'TestPSP',
+      'plugin_form[message][value]' => 'Postfinance',
+      'plugin_form[sha_in_key]' => '123456789',
+      'plugin_form[sha_out_key]' => 'ABCDEFGHI',
+      'plugin_form[language]' => 'en_US',
+    );
+    $this->drupalPostForm('admin/config/services/payment/method/configuration/payment_postfinance_payment_form', $postfinance_configuration, t('Save'));
+
+    // Create postfinance payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
+    // Retrieve plugin configuration of created node
+    $plugin_configuration = $this->node->{$this->field_name}->plugin_configuration;
+
+    $calculated_amount = $this->calculateAmount($plugin_configuration['amount'], $plugin_configuration['quantity'], $plugin_configuration['currency_code']);
+    $this->assertText('AMOUNT' . $calculated_amount);
     $this->assertText('PSPIDdrupalDEMO');
     $this->assertText('ORDERID1');
-    $this->assertText('AMOUNT246');
-    $this->assertText('CURRENCYXXX');
+    $this->assertText('CURRENCYCHF');
     $this->assertText('LANGUAGEen_US');
     $this->assertText('SHASignE5CED4AA85915279F55A517AC42E21067CAB0AF5');
 
     // Finish payment.
-    $this->drupalPostForm(NULL, array(), t('Submit'));
+    $this->drupalPostForm(NULL, NULL, t('Submit'));
 
     // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
@@ -157,7 +181,7 @@ class PostfinancePaymentTest extends WebTestBase {
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
-    // Create saferpay payment.
+    // Create Postfinance payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
     // Finish payment.
@@ -185,7 +209,7 @@ class PostfinancePaymentTest extends WebTestBase {
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
-    // Create saferpay payment.
+    // Create Postfinance payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
     // Finish payment.
@@ -213,7 +237,7 @@ class PostfinancePaymentTest extends WebTestBase {
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
-    // Create saferpay payment.
+    // Create Postfinance payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
     // Finish payment.
@@ -261,6 +285,24 @@ class PostfinancePaymentTest extends WebTestBase {
       ->save();
 
     return $instance;
+  }
+
+  /**
+   * Calculates the total amount
+   *
+   * @param $amount
+   *  Base amount
+   * @param $quantity
+   *  Quantity
+   * @param $currency_code
+   *  Currency code
+   * @return int
+   *  Returns the total amount
+   */
+  function calculateAmount($amount, $quantity, $currency_code) {
+    $base_amount = $amount * $quantity;
+    $currency = Currency::load($currency_code);
+    return intval($base_amount * $currency->getSubunits());
   }
 }
 

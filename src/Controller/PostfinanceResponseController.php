@@ -12,6 +12,7 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\payment\Entity\Payment;
 use Drupal\payment\Entity\PaymentInterface;
 use Drupal\payment_postfinance\PostfinanceHelper;
+use Drupal\payment_postfinance_test\Form\PostfinanceTestForm;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -124,5 +125,30 @@ class PostfinanceResponseController {
       ->createInstance($status));
     $payment->save();
     $payment->getPaymentType()->resumeContext();
+  }
+
+  /**
+   * Generates a SHA sign.
+   *
+   * @param array $payment_data
+   *  Payment Data.
+   * @param string $sha_in_key
+   *  Payment Signature
+   */
+  static public function generateShaSign($payment_data, $sha_in_key) {
+    $string = null;
+    // Sort array in alphabetical order by key.
+    $payment_data = array_change_key_case($payment_data, CASE_UPPER);
+    ksort($payment_data);
+    // Unset values that are not allowed in SHA-IN or SHA-OUT calls.
+    unset($payment_data['SHASIGN'], $payment_data['FORM_BUILD_ID'], $payment_data['FORM_TOKEN'],
+      $payment_data['FORM_ID'], $payment_data['OP']);
+    // Create SHA string that will be encrypted.
+    foreach ($payment_data as $key => $value) {
+      if (isset($value)) {
+        $string .= $key . '=' . $value . $sha_in_key;
+      }
+    }
+    return strtoupper(sha1($string));
   }
 }

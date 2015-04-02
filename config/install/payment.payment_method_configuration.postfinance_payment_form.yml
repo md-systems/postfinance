@@ -1,8 +1,8 @@
-id: postfinance_payment_form
+id: payment_postfinance_payment_form
 label: 'Postfinance Payment Form'
 ownerId: 1
 pluginConfiguration:
-  message_text: ''
+  message_text: 'Postfinance Payment Form'
   message_text_format: plain_text
   pspid: drupalDEMO
   sha_in_key: 'Mysecretsig1875!?'
