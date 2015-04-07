@@ -8,20 +8,13 @@
 namespace Drupal\payment_postfinance\Plugin\Payment\Method;
 
 use Drupal\Component\Plugin\ConfigurablePluginInterface;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\Core\Utility\Token;
 use Drupal\currency\Entity\Currency;
+use Drupal\payment\PaymentExecutionResult;
 use Drupal\payment\Plugin\Payment\Method\PaymentMethodBase;
-use Drupal\payment\Plugin\Payment\Status\PaymentStatusManager;
 use Drupal\payment_postfinance\PostfinanceHelper;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\HttpFoundation\RedirectResponse;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
-use Symfony\Component\HttpKernel\KernelEvents;
+use Drupal\payment\Response\Response;
 
 /**
  * Postfinance Payment Form payment method.
@@ -57,10 +50,12 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     $payment = $this->getPayment();
     $generator = \Drupal::urlGenerator();
 
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
+
     /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
     $currency = Currency::load($payment->getCurrencyCode());
 
-    // Payment data to be send to Postfinance.
+    // Payment data to be sent to Postfinance.
     $payment_data = array(
       'PSPID' => $this->pluginDefinition['pspid'],
       'ORDERID' => $payment->id(),
@@ -77,21 +72,12 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     $payment_data['SHASign'] = PostfinanceHelper::generateShaSign($payment_data, $this->pluginDefinition['sha_in_key']);
 
     // Generate payment link with correct query.
-    $payment_link = (Url::fromUri($this->pluginDefinition['payment_link'], array(
+    $payment_link = (Url::fromUri($payment_config->get('payment_link'), array(
       'absolute' => TRUE,
       'query' => $payment_data,
     )));
 
-    // Redirect to generated payment link.
-    $response = new RedirectResponse($payment_link);
-    $listener = function (FilterResponseEvent $event) use ($response) {
-      $event->setResponse($response);
-      $event->stopPropagation();
-    };
-    $this->eventDispatcher->addListener(KernelEvents::RESPONSE, $listener, 999);
-
-    // Save payment
-    $payment->save();
+    return new PaymentExecutionResult(new Response($payment_link));
   }
 
   /**

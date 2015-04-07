@@ -55,15 +55,15 @@ class PostfinancePaymentTest extends WebTestBase {
 
 
   /**
-   * @var $field_name
+   * @var $fieldName
    */
-  protected $field_name;
+  protected $fieldName;
 
   protected function setUp() {
     parent::setUp();
 
     // Create a field name.
-    $this->field_name = strtolower($this->randomMachineName());
+    $this->fieldName = strtolower($this->randomMachineName());
 
     // Create article content type.
     $node_type = $this->drupalCreateContentType(array(
@@ -84,7 +84,7 @@ class PostfinancePaymentTest extends WebTestBase {
     // Create node with payment plugin configuration.
     $this->node = $this->drupalCreateNode(array(
       'type' => 'article',
-      $this->field_name => array(
+      $this->fieldName => array(
         'plugin_configuration' => array(
           'currency_code' => 'CHF',
           'name' => 'payment_basic',
@@ -108,17 +108,17 @@ class PostfinancePaymentTest extends WebTestBase {
       'payment.payment.view.any'
     ));
     $this->drupalLogin($this->admin_user);
-
-    // Set payment link to test mode
-    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
-    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
-    $payment_config->save();
   }
 
   /**
    * This function tests accepting a Postfinance payment.
    */
   function testPostfinanceAcceptPayment() {
+    // Set payment link to test mode
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
+    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
+    $payment_config->save();
+
     // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'ACCEPT');
     \Drupal::state()->set('postfinance.testing', TRUE);
@@ -131,10 +131,10 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Modifies the postfinance configuration for testing purposes.
     $postfinance_configuration = array(
-      'plugin_form[pspid]' => 'TestPSP',
+      'plugin_form[pspid]' => 'drupalDEMO',
       'plugin_form[message][value]' => 'Postfinance',
-      'plugin_form[sha_in_key]' => '123456789',
-      'plugin_form[sha_out_key]' => 'ABCDEFGHI',
+      'plugin_form[sha_in_key]' => 'Mysecretsig1875!?',
+      'plugin_form[sha_out_key]' => 'ShaOUTpassphrase123!?',
       'plugin_form[language]' => 'en_US',
     );
     $this->drupalPostForm('admin/config/services/payment/method/configuration/payment_postfinance_payment_form', $postfinance_configuration, t('Save'));
@@ -143,11 +143,15 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
     // Retrieve plugin configuration of created node
-    $plugin_configuration = $this->node->{$this->field_name}->plugin_configuration;
+    $plugin_configuration = $this->node->{$this->fieldName}->plugin_configuration;
 
     $calculated_amount = $this->calculateAmount($plugin_configuration['amount'], $plugin_configuration['quantity'], $plugin_configuration['currency_code']);
     $this->assertText('AMOUNT' . $calculated_amount);
-    $this->assertText('PSPIDdrupalDEMO');
+
+    debug($plugin_configuration);
+
+    // Assert AccountID.
+    $this->assertEqual($plugin_configuration['pspid'], 'drupalDEMO');
     $this->assertText('ORDERID1');
     $this->assertText('CURRENCYCHF');
     $this->assertText('LANGUAGEen_US');
@@ -262,7 +266,7 @@ class PostfinancePaymentTest extends WebTestBase {
    */
   function addPaymentFormField(NodeTypeInterface $type, $label = 'Payment Label') {
     $field_storage = entity_create('field_storage_config', array(
-      'field_name' => $this->field_name,
+      'field_name' => $this->fieldName,
       'entity_type' => 'node',
       'type' => 'payment_form',
     ));
@@ -278,7 +282,7 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Assign display settings for the 'default' and 'teaser' view modes.
     entity_get_display('node', $type->id(), 'default')
-      ->setComponent($this->field_name, array(
+      ->setComponent($this->fieldName, array(
         'label' => 'hidden',
         'type' => 'text_default',
       ))
@@ -296,11 +300,13 @@ class PostfinancePaymentTest extends WebTestBase {
    *  Quantity
    * @param $currency_code
    *  Currency code
+   *
    * @return int
    *  Returns the total amount
    */
   function calculateAmount($amount, $quantity, $currency_code) {
     $base_amount = $amount * $quantity;
+    /** @var \Drupal\currency\Entity\Currency $currency */
     $currency = Currency::load($currency_code);
     return intval($base_amount * $currency->getSubunits());
   }
