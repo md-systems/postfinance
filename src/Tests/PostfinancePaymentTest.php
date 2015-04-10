@@ -30,7 +30,7 @@ class PostfinancePaymentTest extends WebTestBase {
     'payment_postfinance_test',
     'node',
     'field_ui',
-    'config'
+    'config',
   );
 
   /**
@@ -71,7 +71,7 @@ class PostfinancePaymentTest extends WebTestBase {
       'name' => 'Article'
     ));
 
-    // Import the curreny configuration
+    // Import the curreny configuration.
     $config_importer = \Drupal::service('currency.config_importer');
     $config_importer->importCurrency('CHF');
 
@@ -92,6 +92,13 @@ class PostfinancePaymentTest extends WebTestBase {
           'quantity' => '2',
           'amount' => '123',
           'description' => 'Payment Description',
+          'customer_name' => 'John Doe',
+          'email' => 'email@example.com',
+          'zip' => '1000',
+          'address' => 'Musterstrasse 1',
+          'city' => 'Musterstadt',
+          'town' => 'Musterheim',
+          'telephone' => '012 345 67 89',
         ),
         'plugin_id' => 'payment_basic',
       ),
@@ -105,7 +112,7 @@ class PostfinancePaymentTest extends WebTestBase {
       'access content',
       'access administration pages',
       'access user profiles',
-      'payment.payment.view.any'
+      'payment.payment.view.any',
     ));
     $this->drupalLogin($this->admin_user);
   }
@@ -114,7 +121,7 @@ class PostfinancePaymentTest extends WebTestBase {
    * This function tests accepting a Postfinance payment.
    */
   function testPostfinanceAcceptPayment() {
-    // Set payment link to test mode
+    // Set payment link to test mode.
     $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
     $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
     $payment_config->save();
@@ -137,21 +144,21 @@ class PostfinancePaymentTest extends WebTestBase {
       'plugin_form[sha_out_key]' => 'ShaOUTpassphrase123!?',
       'plugin_form[language]' => 'en_US',
     );
+
     $this->drupalPostForm('admin/config/services/payment/method/configuration/payment_postfinance_payment_form', $postfinance_configuration, t('Save'));
+
+
+    // Retrieve plugin configuration of created node.
+    $plugin_configuration = $this->node->{$this->fieldName}->plugin_configuration;
 
     // Create postfinance payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
-    // Retrieve plugin configuration of created node
-    $plugin_configuration = $this->node->{$this->fieldName}->plugin_configuration;
-
     $calculated_amount = $this->calculateAmount($plugin_configuration['amount'], $plugin_configuration['quantity'], $plugin_configuration['currency_code']);
     $this->assertText('AMOUNT' . $calculated_amount);
 
-    debug($plugin_configuration);
-
     // Assert AccountID.
-    $this->assertEqual($plugin_configuration['pspid'], 'drupalDEMO');
+    $this->assertText('drupalDEMO');
     $this->assertText('ORDERID1');
     $this->assertText('CURRENCYCHF');
     $this->assertText('LANGUAGEen_US');

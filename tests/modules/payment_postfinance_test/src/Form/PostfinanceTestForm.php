@@ -44,10 +44,10 @@ class PostfinanceTestForm extends FormBase {
     // Load payment method configuration.
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
-    // Callback status
+    // Callback status.
     $callback_status = \Drupal::state()->get('postfinance.callback_status');
 
-    // Generate the callback parameters to be send back.
+    // Generate the callback parameters to be sent.
     $callback_parameters = array(
       '@ORDERID' => $request->query->get('ORDERID'),
       '@AMOUNT' => $request->query->get('AMOUNT'),
@@ -61,22 +61,30 @@ class PostfinanceTestForm extends FormBase {
       '@BRAND' => 'VISA',
     );
 
-    // Generate SHA-OUT signature
+    // Generate SHA-OUT signature.
     $callback_parameters['@SHASIGN'] = PostfinanceHelper::generateShaSign($callback_parameters, $plugin_definition['sha_out_key']);
-    $data_string = SafeMarkup::format('<orderID="@ORDERID"&currency="@CURRENCY"&amount="@AMOUNT"&PM="@PM"&ACCEPTANCE="@ACCEPTANCE"&STATUS="@STATUS"&CARDNO="@CARDNO"&PAYID="@PAYID"&NCERROR="@NCERROR"&BRAND="@BRAND"/>', $callback_parameters);
+    $data_string = SafeMarkup::format('<orderID="@ORDERID"&amount="@AMOUNT"&currency="@CURRENCY"&PM="@PM"&ACCEPTANCE="@ACCEPTANCE"&STATUS="@STATUS"&CARDNO="@CARDNO"&PAYID="@PAYID"&NCERROR="@NCERROR"&BRAND="@BRAND"&SHASIGN="@SHASIGN"/>', $callback_parameters);
 
     // Generate payment link with correct callback query parameters.
     $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'ACCEPT';
 
-    switch($response_url_key) {
+    // The URL for the response is generated according to a key.
+    switch ($response_url_key) {
       case 'ACCEPT':
-        $response_url = Url::fromRoute('payment_postfinance.response_accept');
+        $response_url = $request->query->get('ACCEPTURL');
+        break;
+
       case 'DECLINE':
-      $response_url = Url::fromRoute('payment_postfinance.response_decline');
+        $response_url = $request->query->get('DECLINEURL');
+        break;
+
       case 'EXCEPTION':
-        $response_url = Url::fromRoute('payment_postfinance.response_exception');
+        $response_url = $request->query->get('EXCEPTIONURL');
+        break;
+
       case 'CANCEL':
-        $response_url = Url::fromRoute('payment_postfinance.response_cancel');
+        $response_url = $request->query->get('CANCELURL');
+        break;
     }
     $response_url .= '?' . urlencode($data_string);
 

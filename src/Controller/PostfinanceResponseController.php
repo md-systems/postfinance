@@ -28,7 +28,7 @@ class PostfinanceResponseController {
    * (pending, status 51 or 91).
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request
+   *   Request.
    * @param \Drupal\payment\Entity\PaymentInterface $payment
    *   The Payment Entity type.
    */
@@ -39,15 +39,16 @@ class PostfinanceResponseController {
     // Generate local SHASign.
     $request_values = $request->query->all();
 
-    // Generate SHA-OUT signature
+    // Generate SHA-OUT signature.
     $sha_sign = PostfinanceHelper::generateShaSign($request_values, $plugin_definition['sha_out_key']);
 
     if ($sha_sign == $request->get('SHASIGN')) {
       drupal_set_message(t('Payment succesfull.'), 'error');
       $this->savePayment($payment, 'payment_success');
-    } else {
+    }
+    else {
       $this->savePayment($payment, 'payment_failed');
-      \Drupal::logger(t('Payment verification failed: @error'),array('@error' => 'SHASign did not equal'))->warning('PostfinanceResponseController.php');
+      \Drupal::logger(t('Payment verification failed: @error'), array('@error' => 'SHASign did not equal'))->warning('PostfinanceResponseController.php');
       drupal_set_message(t('Payment verification failed: @error.', array('@error' => 'Verification code incorrect')), 'error');
     }
 

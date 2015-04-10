@@ -27,7 +27,7 @@ use Drupal\payment\Response\Response;
  */
 class PostfinancePaymentFormMethod extends PaymentMethodBase implements ContainerFactoryPluginInterface, ConfigurablePluginInterface {
 
-   /**
+  /**
    * Stores a configuration.
    *
    * @param string $key
@@ -41,11 +41,13 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     $this->configuration[$key] = $value;
     return $this;
   }
-
   /**
-   * Performs the actual payment execution.
+   * Executes the Payment and returns the result.
+   *
+   * @return \Drupal\Payment\PaymentExecutionResult
+   *   Return with Payment Result.
    */
-  protected function doExecutePayment() {
+  public function getPaymentExecutionResult() {
     /** @var \Drupal\payment\Entity\PaymentInterface $payment */
     $payment = $this->getPayment();
     $generator = \Drupal::urlGenerator();
@@ -68,7 +70,7 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
       'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
     );
 
-    // Generate SHA-IN signature
+    // Generate SHA-IN signature.
     $payment_data['SHASign'] = PostfinanceHelper::generateShaSign($payment_data, $this->pluginDefinition['sha_in_key']);
 
     // Generate payment link with correct query.
@@ -78,6 +80,12 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     )));
 
     return new PaymentExecutionResult(new Response($payment_link));
+  }
+
+  /**
+   * Performs the actual payment execution.
+   */
+  protected function doExecutePayment() {
   }
 
   /**
