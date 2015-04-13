@@ -162,7 +162,7 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->assertText('ORDERID1');
     $this->assertText('CURRENCYCHF');
     $this->assertText('LANGUAGEen_US');
-    $this->assertText('SHASignE5CED4AA85915279F55A517AC42E21067CAB0AF5');
+    $this->assertText('SHASignDD1A045AFC36B29F0B4E472DFC72E869841F4B86');
 
     // Finish payment.
     $this->drupalPostForm(NULL, NULL, t('Submit'));
@@ -181,9 +181,11 @@ class PostfinancePaymentTest extends WebTestBase {
    */
   function testPostfinanceDeclinePayment() {
     // Set callback status to decline payment.
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
     \Drupal::state()->set('postfinance.callback_status', 2);
+    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
 
-    // Set payment to accept.
+    // Set payment to decline.
     \Drupal::state()->set('postfinance.return_url_key', 'DECLINE');
 
     // Load payment configuration.
@@ -209,7 +211,9 @@ class PostfinancePaymentTest extends WebTestBase {
    */
   function testPostfinanceExceptionPayment() {
     // Set callback status to decline payment.
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
     \Drupal::state()->set('postfinance.callback_status', 52);
+    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
 
     // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'EXCEPTION');
@@ -237,7 +241,9 @@ class PostfinancePaymentTest extends WebTestBase {
    */
   function testPostfinanceCancelPayment() {
     // Set callback status to decline payment.
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
     \Drupal::state()->set('postfinance.callback_status', 1);
+    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
 
     // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'CANCEL');

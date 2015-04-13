@@ -37,12 +37,20 @@ class PostfinanceResponseController {
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
     // Generate local SHASign.
-    $request_values = $request->query->all();
+    $request_values = simplexml_load_string($request->query->get('data'));
+
+    $attribute_array = array();
+    $attributes = $request_values->attributes();
+
+    foreach ($attributes as $key => $val) {
+      $attribute_array[(string) $key] = (string) $val;
+    }
+    $sha_sent = array_pop($attribute_array);
 
     // Generate SHA-OUT signature.
-    $sha_sign = PostfinanceHelper::generateShaSign($request_values, $plugin_definition['sha_out_key']);
+    $sha_sign = PostfinanceHelper::generateShaSign($attribute_array, $plugin_definition['sha_out_key']);
 
-    if ($sha_sign == $request->get('SHASIGN')) {
+    if ($sha_sign == $sha_sent) {
       drupal_set_message(t('Payment succesfull.'), 'error');
       $this->savePayment($payment, 'payment_success');
     }
@@ -125,7 +133,7 @@ class PostfinanceResponseController {
     $payment->setPaymentStatus(\Drupal::service('plugin.manager.payment.status')
       ->createInstance($status));
     $payment->save();
-    $payment->getPaymentType()->resumeContext();
+    $payment->getPaymentType()->getResumeContextResponse()->getRedirectUrl()->toString();
   }
 
   /**

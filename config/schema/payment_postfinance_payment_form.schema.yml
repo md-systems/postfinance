@@ -11,7 +11,7 @@ payment.plugin_configuration.payment_method_configuration.payment_postfinance_pa
       type: string
       label: SHA Out Key
     language:
-      type: integer
+      type: string
       label: Language
     customer_name:
       type: string

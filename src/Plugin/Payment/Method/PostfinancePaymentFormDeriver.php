@@ -63,15 +63,15 @@ class PostfinancePaymentFormDeriver extends DeriverBase implements ContainerDeri
         /** @var \Drupal\payment_postfinance\Plugin\Payment\MethodConfiguration\PostfinancePaymentFormConfiguration $configuration_plugin */
         $configuration_plugin = $this->paymentMethodConfigurationManager->createInstance($payment_method->getPluginId(), $payment_method->getPluginConfiguration());
         $this->derivatives[$payment_method->id()] = array(
-            // 'active' => $payment_method->status(),
-            'id' => 'payment_postfinance_payment_form:' . $payment_method->id(),
-            'message_text' => '',
-            'message_text_format' => '',
-            'pspid' => $configuration_plugin->getPSPID(),
-            'sha_in_key' => $configuration_plugin->getShaInKey(),
-            'sha_out_key' => $configuration_plugin->getShaOutKey(),
-            'language' => $configuration_plugin->getLanguage(),
-          ) + $base_plugin_definition;
+          // 'active' => $payment_method->status(),
+          'id' => 'payment_postfinance_payment_form:' . $payment_method->id(),
+          'message_text' => '',
+          'message_text_format' => '',
+          'pspid' => $configuration_plugin->getPSPID(),
+          'language' => $configuration_plugin->getLanguage(),
+          'sha_in_key' => $configuration_plugin->getShaInKey(),
+          'sha_out_key' => $configuration_plugin->getShaOutKey(),
+      ) + $base_plugin_definition;
       }
     }
 

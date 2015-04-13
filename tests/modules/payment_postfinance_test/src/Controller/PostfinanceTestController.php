@@ -18,19 +18,20 @@ use Symfony\Component\HttpFoundation\Response;
   * Controller for testing purposes.
   */
 
-  class PostfinanceTestController {
-    public $config;
+class PostfinanceTestController {
+  public $config;
 
-    public function __construct() {
-      $this->config = \Drupal::config('payment_postfinance.settings');
-    }
-
-    /**
-     * For more documentation regarding this test controller see: \Drupal\payment_postfinance\README.txt
-     */
-    public function orderstandard(Request $request = NULL) {
-      return new Response(Url::fromRoute('payment_postfinance.response_accept', array(), array(
-        'query' => $request->query->all()
-      ))->setAbsolute()->toString());
-    }
+  public function __construct() {
+    $this->config = \Drupal::config('payment_postfinance.settings');
   }
+
+  /**
+   * More info about this test controller: \payment_postfinance\README.txt.
+   */
+  public function orderstandard(Request $request = NULL) {
+    return new Response(Url::fromRoute('payment_postfinance.response_accept', array(), array(
+        'query' => $request->query->all(),
+      ))->setAbsolute());
+  }
+
+}

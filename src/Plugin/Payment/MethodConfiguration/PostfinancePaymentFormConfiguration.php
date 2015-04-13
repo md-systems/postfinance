@@ -77,6 +77,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   public function defaultConfiguration() {
     return parent::defaultConfiguration() + array(
       'pspid' => 'drupalDEMO',
+      'language' => 'en_US',
       'sha_in_key' => 'Mysecretsig1875!?',
       'sha_out_key' => 'ShaOUTpassphrase123!?',
     );
@@ -185,7 +186,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
       '#options' => array(
         'en_US' => t('English'),
       ),
-      '#description' => 'Your affiliation name in the postfinance system.',
+      '#description' => 'Language the payment site should display',
       '#default_value' => $this->getLanguage(),
     );
 
