@@ -69,7 +69,7 @@ class PostfinanceResponseController {
    * authorization (status 2) more than the maximum permissible number of times.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request
+   *   Request.
    * @param \Drupal\payment\Entity\PaymentInterface $payment
    *   The Payment Entity type.
    */
@@ -89,7 +89,7 @@ class PostfinanceResponseController {
    * If this field is empty the customer will be displayed the accepturl instead.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request
+   *   Request.
    * @param \Drupal\payment\Entity\PaymentInterface $payment
    *   The Payment Entity type.
    */
@@ -109,7 +109,7 @@ class PostfinanceResponseController {
    * If this field is empty the declineurl will be displayed to the customer instead.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *   Request
+   *   Request.
    * @param \Drupal\payment\Entity\PaymentInterface $payment
    *   The Payment Entity type.
    */
@@ -125,9 +125,9 @@ class PostfinanceResponseController {
    * Saves the payment.
    *
    * @param \Drupal\payment\Entity\PaymentInterface $payment
-   *  Payment Interface.
+   *   Payment Interface.
    * @param string $status
-   *  Payment Status
+   *   Payment Status.
    */
   public function savePayment(PaymentInterface $payment, $status) {
     $payment->setPaymentStatus(\Drupal::service('plugin.manager.payment.status')
@@ -136,28 +136,4 @@ class PostfinanceResponseController {
     $payment->getPaymentType()->getResumeContextResponse()->getRedirectUrl()->toString();
   }
 
-  /**
-   * Generates a SHA sign.
-   *
-   * @param array $payment_data
-   *  Payment Data.
-   * @param string $sha_in_key
-   *  Payment Signature
-   */
-  static public function generateShaSign($payment_data, $sha_in_key) {
-    $string = null;
-    // Sort array in alphabetical order by key.
-    $payment_data = array_change_key_case($payment_data, CASE_UPPER);
-    ksort($payment_data);
-    // Unset values that are not allowed in SHA-IN or SHA-OUT calls.
-    unset($payment_data['SHASIGN'], $payment_data['FORM_BUILD_ID'], $payment_data['FORM_TOKEN'],
-      $payment_data['FORM_ID'], $payment_data['OP']);
-    // Create SHA string that will be encrypted.
-    foreach ($payment_data as $key => $value) {
-      if (isset($value)) {
-        $string .= $key . '=' . $value . $sha_in_key;
-      }
-    }
-    return strtoupper(sha1($string));
-  }
 }

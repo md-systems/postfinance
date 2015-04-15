@@ -180,16 +180,18 @@ class PostfinancePaymentTest extends WebTestBase {
    * Tests declining Postfinance payment.
    */
   function testPostfinanceDeclinePayment() {
-    // Set callback status to decline payment.
+    // Load payment configuration.
     $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
-    \Drupal::state()->set('postfinance.callback_status', 2);
     $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
+    $payment_config->save();
 
     // Set payment to decline.
     \Drupal::state()->set('postfinance.return_url_key', 'DECLINE');
 
-    // Load payment configuration.
-    $payment_config = \Drupal::config('payment_postfinance.settings');
+    // Set callback status to decline payment.
+    \Drupal::state()->set('postfinance.callback_status', 2);
+    \Drupal::state()->set('postfinance.testing', TRUE);
+
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
@@ -212,14 +214,14 @@ class PostfinancePaymentTest extends WebTestBase {
   function testPostfinanceExceptionPayment() {
     // Set callback status to decline payment.
     $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
-    \Drupal::state()->set('postfinance.callback_status', 52);
     $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
+    $payment_config->save();
 
-    // Set payment to accept.
+    \Drupal::state()->set('postfinance.callback_status', 52);
+    \Drupal::state()->set('postfinance.testing', TRUE);
+
+    // Set payment to exception case.
     \Drupal::state()->set('postfinance.return_url_key', 'EXCEPTION');
-
-    // Load payment configuration.
-    $payment_config = \Drupal::config('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
@@ -242,14 +244,14 @@ class PostfinancePaymentTest extends WebTestBase {
   function testPostfinanceCancelPayment() {
     // Set callback status to decline payment.
     $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
-    \Drupal::state()->set('postfinance.callback_status', 1);
     $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
+    $payment_config->save();
 
-    // Set payment to accept.
+    \Drupal::state()->set('postfinance.callback_status', 1);
+    \Drupal::state()->set('postfinance.testing', TRUE);
+
+    // Set payment to cancel.
     \Drupal::state()->set('postfinance.return_url_key', 'CANCEL');
-
-    // Load payment configuration.
-    $payment_config = \Drupal::config('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());

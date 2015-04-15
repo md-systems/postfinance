@@ -39,6 +39,7 @@ class PostfinanceTestForm extends FormBase {
     }
 
     // Load payment.
+    /** @var \Drupal\payment\Entity\payment $payment */
     $payment = Payment::load($request->query->get('ORDERID'));
 
     // Load payment method configuration.
