@@ -19,7 +19,7 @@ use Drupal\simpletest\WebTestBase;
 /**
  * Token integration.
  *
- * @group Currency
+ * @group payment_postfinance
  */
 class PostfinancePaymentTest extends WebTestBase {
 
