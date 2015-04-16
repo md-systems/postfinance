@@ -15,6 +15,7 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\node\NodeTypeInterface;
 use Drupal\simpletest\WebTestBase;
+use Drupal\payment_postfinance\PostfinanceHelper;
 
 /**
  * Token integration.
@@ -68,7 +69,7 @@ class PostfinancePaymentTest extends WebTestBase {
     // Create article content type.
     $node_type = $this->drupalCreateContentType(array(
       'type' => 'article',
-      'name' => 'Article'
+      'name' => 'Article',
     ));
 
     // Import the curreny configuration.
@@ -154,7 +155,7 @@ class PostfinancePaymentTest extends WebTestBase {
     // Create postfinance payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
-    $calculated_amount = $this->calculateAmount($plugin_configuration['amount'], $plugin_configuration['quantity'], $plugin_configuration['currency_code']);
+    $calculated_amount = PostfinanceHelper::calculateAmount($plugin_configuration['amount'], $plugin_configuration['quantity'], $plugin_configuration['currency_code']);
     $this->assertText('AMOUNT' . $calculated_amount);
 
     // Assert AccountID.
