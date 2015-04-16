@@ -56,7 +56,7 @@ class PostfinancePaymentFormDeriver extends DeriverBase implements ContainerDeri
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
-    /** @var \Drupal\payment\Entity\PaymentMethodConfigurationInterface[] $payment_methods */
+    // @var \Drupal\payment\Entity\PaymentMethodConfigurationInterface[] $payment_methods
     $payment_methods = $this->paymentMethodConfigurationStorage->loadMultiple();
     foreach ($payment_methods as $payment_method) {
       if ($payment_method->getPluginId() == 'payment_postfinance_payment_form') {
@@ -71,7 +71,7 @@ class PostfinancePaymentFormDeriver extends DeriverBase implements ContainerDeri
           'language' => $configuration_plugin->getLanguage(),
           'sha_in_key' => $configuration_plugin->getShaInKey(),
           'sha_out_key' => $configuration_plugin->getShaOutKey(),
-      ) + $base_plugin_definition;
+        ) + $base_plugin_definition;
       }
     }
 

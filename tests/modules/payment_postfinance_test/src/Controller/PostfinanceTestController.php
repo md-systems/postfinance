@@ -15,9 +15,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
-  * Controller for testing purposes.
-  */
-
+ * Controller for testing purposes.
+ */
 class PostfinanceTestController {
   public $config;
 

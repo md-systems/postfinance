@@ -86,7 +86,7 @@ class PostfinanceResponseController {
    *
    * URL of the web page to display to the customer when the payment result is
    * uncertain (status 52 or 92).
-   * If this field is empty the customer will be displayed the accepturl instead.
+   * If the field is empty the customer will be displayed the accepturl instead.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request.
@@ -106,7 +106,7 @@ class PostfinanceResponseController {
    *
    * URL of the web page to display to the customer when he cancels the payment
    * (status 1).
-   * If this field is empty the declineurl will be displayed to the customer instead.
+   * If the field is empty the declineurl will be displayed instead.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Request.

@@ -84,7 +84,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   }
 
   /**
-   * @param $psid
+   * @param string $psid
    * @return $this
    */
   public function setPSPID($psid) {
@@ -196,9 +196,14 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   }
 
   /**
+   * Validates all Form fields.
+   *
    * @param array $element
+   *   Parent element which will be used.
    * @param FormStateInterface $form_state
+   *   The current state of the form.
    * @param array $form
+   *   The form itself.
    */
   public function formElementsValidate(array $element, FormStateInterface $form_state, array $form) {
     $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);

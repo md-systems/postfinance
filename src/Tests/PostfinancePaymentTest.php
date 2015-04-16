@@ -272,12 +272,12 @@ class PostfinancePaymentTest extends WebTestBase {
    * Adds the payment field to the node.
    *
    * @param NodeTypeInterface $type
-   *   Node type interface type
-   *
+   *   Node type interface type.
    * @param string $label
-   *   Field label
+   *   Field label.
    *
    * @return \Drupal\Core\Entity\EntityInterface|static
+   *   Form instance.
    */
   function addPaymentFormField(NodeTypeInterface $type, $label = 'Payment Label') {
     $field_storage = entity_create('field_storage_config', array(
@@ -306,24 +306,4 @@ class PostfinancePaymentTest extends WebTestBase {
     return $instance;
   }
 
-  /**
-   * Calculates the total amount
-   *
-   * @param $amount
-   *  Base amount
-   * @param $quantity
-   *  Quantity
-   * @param $currency_code
-   *  Currency code
-   *
-   * @return int
-   *  Returns the total amount
-   */
-  function calculateAmount($amount, $quantity, $currency_code) {
-    $base_amount = $amount * $quantity;
-    /** @var \Drupal\currency\Entity\Currency $currency */
-    $currency = Currency::load($currency_code);
-    return intval($base_amount * $currency->getSubunits());
-  }
 }
-
