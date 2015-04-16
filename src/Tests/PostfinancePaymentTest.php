@@ -163,7 +163,8 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->assertText('ORDERID1');
     $this->assertText('CURRENCYCHF');
     $this->assertText('LANGUAGEen_US');
-    $this->assertText('SHASignDD1A045AFC36B29F0B4E472DFC72E869841F4B86');
+    // The Signature depends on the global root, so we generate it explicitly.
+    $this->assertText('SHASign' . PostfinanceHelper::generateShaSign(\Drupal::state()->get('postfinance.payment_data'), $postfinance_configuration['plugin_form[sha_in_key]']));
 
     // Finish payment.
     $this->drupalPostForm(NULL, NULL, t('Submit'));

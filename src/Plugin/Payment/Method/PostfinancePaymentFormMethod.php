@@ -70,6 +70,11 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
       'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
     );
 
+    // Save the payment data if we are testing the module.
+    if (\Drupal::state()->get('postfinance.testing')) {
+      \Drupal::state()->set('postfinance.payment_data', $payment_data);
+    }
+
     // Generate SHA-IN signature.
     $payment_data['SHASign'] = PostfinanceHelper::generateShaSign($payment_data, $this->pluginDefinition['sha_in_key']);
 
