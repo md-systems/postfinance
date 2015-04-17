@@ -7,12 +7,9 @@
 namespace Drupal\payment_postfinance\Controller;
 
 use Drupal\currency\Entity\Currency;
-use Drupal\Component\Utility\SafeMarkup;
-use Drupal\Component\Utility\Crypt;
 use Drupal\payment\Entity\Payment;
 use Drupal\payment\Entity\PaymentInterface;
 use Drupal\payment_postfinance\PostfinanceHelper;
-use Drupal\payment_postfinance_test\Form\PostfinanceTestForm;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -35,30 +32,26 @@ class PostfinanceResponseController {
   public function processAcceptResponse(Request $request, PaymentInterface $payment) {
     // The definition of the plugin implementation.
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
+    $request_array = $request->query->all();
 
-    // Generate local SHASign.
-    $request_values = simplexml_load_string($request->query->get('data'));
+    // Remove the SHASign from the request data and save as the sent signature.
+    $sha_sent = array_pop($request_array);
 
-    $attribute_array = array();
-    $attributes = $request_values->attributes();
+    // Generate SHASign from request data.
+    $sha_sign = PostfinanceHelper::generateShaSign($request_array, $plugin_definition['sha_out_key']);
 
-    foreach ($attributes as $key => $val) {
-      $attribute_array[(string) $key] = (string) $val;
-    }
-    $sha_sent = array_pop($attribute_array);
-
-    // Generate SHA-OUT signature.
-    $sha_sign = PostfinanceHelper::generateShaSign($attribute_array, $plugin_definition['sha_out_key']);
-
+    // Check if the sent signature is valid.
     if ($sha_sign == $sha_sent) {
-      drupal_set_message(t('Payment succesfull.'), 'error');
+      drupal_set_message(t('Payment succesfull.'));
       $this->savePayment($payment, 'payment_success');
     }
     else {
-      $this->savePayment($payment, 'payment_failed');
+      $this->savePayment($payment, 'payment_failed', 'error');
       \Drupal::logger(t('Payment verification failed: @error'), array('@error' => 'SHASign did not equal'))->warning('PostfinanceResponseController.php');
       drupal_set_message(t('Payment verification failed: @error.', array('@error' => 'Verification code incorrect')), 'error');
     }
+
+    debug($request->query->all(), "Request");
 
   }
 

@@ -76,10 +76,10 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
    */
   public function defaultConfiguration() {
     return parent::defaultConfiguration() + array(
-      'pspid' => 'drupalDEMO',
-      'language' => 'en_US',
-      'sha_in_key' => 'Mysecretsig1875!?',
-      'sha_out_key' => 'ShaOUTpassphrase123!?',
+      'pspid' => '',
+      'language' => '',
+      'sha_in_key' => '',
+      'sha_out_key' => '',
     );
   }
 

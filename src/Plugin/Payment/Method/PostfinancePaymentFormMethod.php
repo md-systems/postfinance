@@ -52,7 +52,7 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     $payment = $this->getPayment();
     $generator = \Drupal::urlGenerator();
 
-    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
+    $payment_config = \Drupal::config('payment_postfinance.settings');
 
     /** @var \Drupal\currency\Entity\CurrencyInterface $currency */
     $currency = Currency::load($payment->getCurrencyCode());
@@ -61,7 +61,7 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     $payment_data = array(
       'PSPID' => $this->pluginDefinition['pspid'],
       'ORDERID' => $payment->id(),
-      'AMOUNT' => intval($payment->getAmount() * $currency->getSubunits()),
+      'AMOUNT' => PostfinanceHelper::calculateAmount($payment->getAmount(), $currency->getSubunits()),
       'CURRENCY' => $payment->getCurrencyCode(),
       'LANGUAGE' => $this->pluginDefinition['language'],
       'ACCEPTURL' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $payment->id()), array('absolute' => TRUE)),
@@ -70,27 +70,16 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
       'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $payment->id()), array('absolute' => TRUE)),
     );
 
-    // Save the payment data if we are testing the module.
-    if (\Drupal::state()->get('postfinance.testing')) {
-      \Drupal::state()->set('postfinance.payment_data', $payment_data);
-    }
-
     // Generate SHA-IN signature.
-    $payment_data['SHASign'] = PostfinanceHelper::generateShaSign($payment_data, $this->pluginDefinition['sha_in_key']);
+    $payment_data['SHASIGN'] = PostfinanceHelper::generateShaSign($payment_data, $this->pluginDefinition['sha_in_key']);
+    $payment->save();
 
     // Generate payment link with correct query.
-    $payment_link = (Url::fromUri($payment_config->get('payment_link'), array(
+    $response = new Response(Url::fromUri($payment_config->get('payment_link'), array(
       'absolute' => TRUE,
       'query' => $payment_data,
     )));
-
-    return new PaymentExecutionResult(new Response($payment_link));
-  }
-
-  /**
-   * Performs the actual payment execution.
-   */
-  protected function doExecutePayment() {
+    return new PaymentExecutionResult($response);
   }
 
   /**

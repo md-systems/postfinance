@@ -6,8 +6,6 @@
  */
 
 namespace Drupal\payment_postfinance\Tests;
-
-use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Url;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\currency\Entity\Currency;
@@ -89,10 +87,10 @@ class PostfinancePaymentTest extends WebTestBase {
         'plugin_configuration' => array(
           'currency_code' => 'CHF',
           'name' => 'payment_basic',
-          'payment_id' => NULL,
+          'description' => 'Payment description',
+          'payment_id' => '1',
           'quantity' => '2',
           'amount' => '123',
-          'description' => 'Payment Description',
           'customer_name' => 'John Doe',
           'email' => 'email@example.com',
           'zip' => '1000',
@@ -116,63 +114,78 @@ class PostfinancePaymentTest extends WebTestBase {
       'payment.payment.view.any',
     ));
     $this->drupalLogin($this->admin_user);
+
+    // Set payment link to test mode.
+    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
+    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
+    $payment_config->save();
+    $this->config('');
   }
 
   /**
    * This function tests accepting a Postfinance payment.
    */
   function testPostfinanceAcceptPayment() {
-    // Set payment link to test mode.
-    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
-    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
-    $payment_config->save();
-
     // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'ACCEPT');
     \Drupal::state()->set('postfinance.testing', TRUE);
 
     // Load payment configuration.
-    $payment_config = \Drupal::config('payment_postfinance.settings');
+    $payment_config = $this->config('payment_postfinance.settings');
 
     // Check if payment link is correctly set.
     $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
     // Modifies the postfinance configuration for testing purposes.
     $postfinance_configuration = array(
-      'plugin_form[pspid]' => 'drupalDEMO',
+      'plugin_form[pspid]' => 'TESTACCOUNT',
       'plugin_form[message][value]' => 'Postfinance',
-      'plugin_form[sha_in_key]' => 'Mysecretsig1875!?',
-      'plugin_form[sha_out_key]' => 'ShaOUTpassphrase123!?',
+      'plugin_form[sha_in_key]' => 'SECRETSHAIN',
+      'plugin_form[sha_out_key]' => 'SECRETSHAOUT',
       'plugin_form[language]' => 'en_US',
     );
 
     $this->drupalPostForm('admin/config/services/payment/method/configuration/payment_postfinance_payment_form', $postfinance_configuration, t('Save'));
 
+    // Create postfinance payment.
+    $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
 
     // Retrieve plugin configuration of created node.
     $plugin_configuration = $this->node->{$this->fieldName}->plugin_configuration;
 
-    // Create postfinance payment.
-    $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
+    $calculated_amount = PostfinanceHelper::calculateAmount($plugin_configuration['amount'], $plugin_configuration['quantity'], $plugin_configuration['currency_code']) * 100;
 
-    $calculated_amount = PostfinanceHelper::calculateAmount($plugin_configuration['amount'], $plugin_configuration['quantity'], $plugin_configuration['currency_code']);
+
+    $generator = \Drupal::urlGenerator();
+
+    $payment_data = array(
+      'PSPID' => $postfinance_configuration['plugin_form[pspid]'],
+      'ORDERID' => $plugin_configuration['payment_id'],
+      'AMOUNT' => $calculated_amount,
+      'CURRENCY' => $plugin_configuration['currency_code'],
+      'LANGUAGE' => $postfinance_configuration['plugin_form[language]'],
+      'ACCEPTURL' => $generator->generateFromRoute('payment_postfinance.response_accept', array('payment' => $plugin_configuration['payment_id']), array('absolute' => TRUE)),
+      'DECLINEURL' => $generator->generateFromRoute('payment_postfinance.response_decline', array('payment' => $plugin_configuration['payment_id']), array('absolute' => TRUE)),
+      'EXCEPTIONURL' => $generator->generateFromRoute('payment_postfinance.response_exception', array('payment' => $plugin_configuration['payment_id']), array('absolute' => TRUE)),
+      'CANCELURL' => $generator->generateFromRoute('payment_postfinance.response_cancel', array('payment' => $plugin_configuration['payment_id']), array('absolute' => TRUE)),
+    );
+
+    // Assert sent values.
     $this->assertText('AMOUNT' . $calculated_amount);
-
-    // Assert AccountID.
-    $this->assertText('drupalDEMO');
+    $this->assertText('TESTACCOUNT');
     $this->assertText('ORDERID1');
     $this->assertText('CURRENCYCHF');
     $this->assertText('LANGUAGEen_US');
     // The Signature depends on the global root, so we generate it explicitly.
-    $this->assertText('SHASign' . PostfinanceHelper::generateShaSign(\Drupal::state()->get('postfinance.payment_data'), $postfinance_configuration['plugin_form[sha_in_key]']));
+    $this->assertText('SHASIGN' . PostfinanceHelper::generateShaSign($payment_data, $postfinance_configuration['plugin_form[sha_in_key]']));
 
     // Finish payment.
     $this->drupalPostForm(NULL, NULL, t('Submit'));
 
     // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
+    $this->assertText('Payment succesfull.');
     $this->assertNoText('Failed');
-    $this->assertText('Payment Description');
     $this->assertText('CHF 123.00');
     $this->assertText('CHF 246.00');
     $this->assertText('Completed');
@@ -182,13 +195,12 @@ class PostfinancePaymentTest extends WebTestBase {
    * Tests declining Postfinance payment.
    */
   function testPostfinanceDeclinePayment() {
-    // Load payment configuration.
-    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
-    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
-    $payment_config->save();
-
     // Set payment to decline.
     \Drupal::state()->set('postfinance.return_url_key', 'DECLINE');
+
+
+    // Load payment configuration.
+    $payment_config = $this->config('payment_postfinance.settings');
 
     // Set callback status to decline payment.
     \Drupal::state()->set('postfinance.callback_status', 2);
@@ -204,8 +216,9 @@ class PostfinancePaymentTest extends WebTestBase {
     // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
 
-    // Check if payment was succesfully created.
+    // Check if payment was succesfully declined.
     $this->drupalGet('payment/1');
+    $this->assertText('Payment processing declined.');
     $this->assertNoText('Completed');
     $this->assertText('Failed');
   }
@@ -214,11 +227,10 @@ class PostfinancePaymentTest extends WebTestBase {
    * Tests exception Postfinance payment.
    */
   function testPostfinanceExceptionPayment() {
-    // Set callback status to decline payment.
-    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
-    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
-    $payment_config->save();
+    // Load payment configuration.
+    $payment_config = $this->config('payment_postfinance.settings');
 
+    // Set callback status to decline payment.
     \Drupal::state()->set('postfinance.callback_status', 52);
     \Drupal::state()->set('postfinance.testing', TRUE);
 
@@ -234,8 +246,9 @@ class PostfinancePaymentTest extends WebTestBase {
     // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
 
-    // Check if payment was succesfully created.
+    // Check if payment was created with an exception error.
     $this->drupalGet('payment/1');
+    $this->assertText('Payment processing exception.');
     $this->assertNoText('Completed');
     $this->assertText('Failed');
   }
@@ -244,11 +257,10 @@ class PostfinancePaymentTest extends WebTestBase {
    * Tests cancel Postfinance payment.
    */
   function testPostfinanceCancelPayment() {
-    // Set callback status to decline payment.
-    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
-    $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
-    $payment_config->save();
+    // Load payment configuration.
+    $payment_config = $this->config('payment_postfinance.settings');
 
+    // Set callback status to decline payment.
     \Drupal::state()->set('postfinance.callback_status', 1);
     \Drupal::state()->set('postfinance.testing', TRUE);
 
@@ -264,8 +276,9 @@ class PostfinancePaymentTest extends WebTestBase {
     // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
 
-    // Check if payment was succesfully created.
+    // Check if payment was succesfully cancelled.
     $this->drupalGet('payment/1');
+    $this->assertText('Payment processing cancelled.');
     $this->assertNoText('Completed');
     $this->assertText('Cancelled');
   }

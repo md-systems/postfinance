@@ -50,26 +50,19 @@ class PostfinanceTestForm extends FormBase {
 
     // Generate the callback parameters to be sent.
     $callback_parameters = array(
-      '@ORDERID' => $request->query->get('ORDERID'),
-      '@AMOUNT' => $request->query->get('AMOUNT'),
-      '@CURRENCY' => $request->query->get('CURRENCY'),
-      '@PM' => 'CreditCard',
-      '@ACCEPTANCE' => 'test123',
-      '@STATUS' => (empty($callback_status) ? 5 : $callback_status),
-      '@CARDNO' => 'XXXXXXXXXXXX1111',
-      '@PAYID' => 1136745,
-      '@NCERROR' => 0,
-      '@BRAND' => 'VISA',
+      'ORDERID' => $request->query->get('ORDERID'),
+      'AMOUNT' => $request->query->get('AMOUNT'),
+      'CURRENCY' => $request->query->get('CURRENCY'),
+      'PM' => 'CreditCard',
+      'ACCEPTANCE' => 'test123',
+      'STATUS' => (empty($callback_status) ? 5 : $callback_status),
+      'CARDNO' => 'XXXXXXXXXXXX1111',
+      'PAYID' => 1136745,
+      'NCERROR' => 0,
+      'BRAND' => 'VISA',
     );
 
-    // Put together the array which will be used to generate the signature.
-    $hash_array = array_combine(str_replace('@', '', array_keys($callback_parameters)), array_values($callback_parameters));
-
-    // Generate SHA-OUT signature.
-    $callback_parameters['@SHASIGN'] = PostfinanceHelper::generateShaSign($hash_array, $plugin_definition['sha_out_key']);
-
-    $data_string = SafeMarkup::format('<IDP ORDERID="@ORDERID" AMOUNT="@AMOUNT" CURRENCY="@CURRENCY" PM="@PM" ACCEPTANCE="@ACCEPTANCE" STATUS="@STATUS" CARDNO="@CARDNO" PAYID="@PAYID" NCERROR="@NCERROR" BRAND="@BRAND" SHASIGN="@SHASIGN" />',
-      $callback_parameters);
+    $callback_parameters['SHASIGN'] = PostfinanceHelper::generateShaSign($callback_parameters, $plugin_definition['sha_out_key']);
 
     // Generate payment link with correct callback query parameters.
     $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'ACCEPT';
@@ -92,10 +85,11 @@ class PostfinanceTestForm extends FormBase {
         $response_url = $request->query->get('CANCELURL');
         break;
     }
-    $response_url .= '?data=' . urlencode($data_string);
 
     // Complete the form.
-    $form['#action'] = $response_url;
+    $form['#action'] = Url::fromUri($response_url, array(
+      'query' => $callback_parameters,
+    ))->toString();
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = array(
       '#type' => 'submit',
@@ -105,15 +99,11 @@ class PostfinanceTestForm extends FormBase {
 
     return $form;
   }
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-  }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
   }
+
 }
