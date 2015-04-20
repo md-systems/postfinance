@@ -49,7 +49,7 @@ class PostfinanceTestForm extends FormBase {
     $callback_status = \Drupal::state()->get('postfinance.callback_status');
 
     // Generate the callback parameters to be sent.
-    $callback_parameters = array(
+    $form_elements = array(
       'ORDERID' => $request->query->get('ORDERID'),
       'AMOUNT' => $request->query->get('AMOUNT'),
       'CURRENCY' => $request->query->get('CURRENCY'),
@@ -62,7 +62,16 @@ class PostfinanceTestForm extends FormBase {
       'BRAND' => 'VISA',
     );
 
-    $callback_parameters['SHASIGN'] = PostfinanceHelper::generateShaSign($callback_parameters, $plugin_definition['sha_out_key']);
+    $form_elements['SHASIGN'] = PostfinanceHelper::generateShaSign($form_elements, $plugin_definition['sha_out_key']);
+
+    drupal_set_message($form_elements['SHASIGN']);
+
+    foreach ($form_elements as $key => $value) {
+      $form[$key] = array(
+        '#type' => 'hidden',
+        '#value' => $value,
+      );
+    }
 
     // Generate payment link with correct callback query parameters.
     $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'ACCEPT';
@@ -84,12 +93,14 @@ class PostfinanceTestForm extends FormBase {
       case 'CANCEL':
         $response_url = $request->query->get('CANCELURL');
         break;
+
+      default:
+        $response_url = $request->query->get('EXCEPTIONURL');
+        break;
     }
 
     // Complete the form.
-    $form['#action'] = Url::fromUri($response_url, array(
-      'query' => $callback_parameters,
-    ))->toString();
+    $form['#action'] = $response_url;
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = array(
       '#type' => 'submit',
@@ -104,6 +115,7 @@ class PostfinanceTestForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    drupal_set_message("Submit Form");
   }
 
 }

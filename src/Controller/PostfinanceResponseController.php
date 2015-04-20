@@ -28,30 +28,53 @@ class PostfinanceResponseController {
    *   Request.
    * @param \Drupal\payment\Entity\PaymentInterface $payment
    *   The Payment Entity type.
+   *
+   * @return \Drupal\Core\Response
+   *   The Response to the accepting request.
    */
   public function processAcceptResponse(Request $request, PaymentInterface $payment) {
     // The definition of the plugin implementation.
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
-    $request_array = $request->query->all();
 
-    // Remove the SHASign from the request data and save as the sent signature.
-    $sha_sent = array_pop($request_array);
+    try {
+      $request_array = $request->request->all();
+      $sha_sent = $request->request->get('SHASIGN');
 
-    // Generate SHASign from request data.
-    $sha_sign = PostfinanceHelper::generateShaSign($request_array, $plugin_definition['sha_out_key']);
+      $request_data = array(
+        'ORDERID' => $request->request->get('ORDERID'),
+        'AMOUNT' => $request->request->get('AMOUNT'),
+        'CURRENCY' => $request->request->get('CURRENCY'),
+        'PM' => $request->request->get('PM'),
+        'ACCEPTANCE' => $request->request->get('ACCEPTANCE'),
+        'STATUS' => $request->request->get('STATUS'),
+        'CARDNO' => $request->request->get('CARDNO'),
+        'PAYID' => $request->request->get('PAYID'),
+        'NCERROR' => $request->request->get('NCERROR'),
+        'BRAND' => $request->request->get('BRAND'),
+      );
 
-    // Check if the sent signature is valid.
-    if ($sha_sign == $sha_sent) {
-      drupal_set_message(t('Payment succesfull.'));
-      $this->savePayment($payment, 'payment_success');
+      // Generate SHASign from request data.
+      $sha_sign = PostfinanceHelper::generateShaSign($request_data, $plugin_definition['sha_out_key']);
+
+      // Check if the sent signature is valid.
+      if ($sha_sign != $sha_sent) {
+        throw new \Exception('Invalid postfinance key.');
+      }
+
+      if ($request_array['STATUS'] == 'error') {
+        throw new \Exception('There was an error processing the request:' . $request_data['NCERROR']);
+      }
+
+      if ($request_array['STATUS'] == 5) {
+        drupal_set_message(t('Payment successful.'));
+        return $this->savePayment($payment, 'payment_success');
+      }
     }
-    else {
-      $this->savePayment($payment, 'payment_failed', 'error');
+    catch (\Exception $e) {
       \Drupal::logger(t('Payment verification failed: @error'), array('@error' => 'SHASign did not equal'))->warning('PostfinanceResponseController.php');
       drupal_set_message(t('Payment verification failed: @error.', array('@error' => 'Verification code incorrect')), 'error');
+      return $this->savePayment($payment, 'payment_failed', 'error');
     }
-
-    debug($request->query->all(), "Request");
 
   }
 
@@ -121,12 +144,15 @@ class PostfinanceResponseController {
    *   Payment Interface.
    * @param string $status
    *   Payment Status.
+   *
+   * @return \Drupal\Core\Url
+   *   Return the Response with the new status
    */
-  public function savePayment(PaymentInterface $payment, $status) {
+  public function savePayment(PaymentInterface $payment, $status = 'payment_failed') {
     $payment->setPaymentStatus(\Drupal::service('plugin.manager.payment.status')
       ->createInstance($status));
     $payment->save();
-    $payment->getPaymentType()->getResumeContextResponse()->getRedirectUrl()->toString();
+    return $payment->getPaymentType()->getResumeContextResponse()->getResponse();
   }
 
 }

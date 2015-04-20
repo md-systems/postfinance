@@ -181,10 +181,10 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Finish payment.
     $this->drupalPostForm(NULL, NULL, t('Submit'));
+    $this->assertText('Payment successful.');
 
     // Check if payment was succesfully created.
     $this->drupalGet('payment/1');
-    $this->assertText('Payment succesfull.');
     $this->assertNoText('Failed');
     $this->assertText('CHF 123.00');
     $this->assertText('CHF 246.00');
