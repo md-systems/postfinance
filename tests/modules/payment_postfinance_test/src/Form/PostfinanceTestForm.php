@@ -51,27 +51,28 @@ class PostfinanceTestForm extends FormBase {
     // Generate the callback parameters to be sent.
     $form_elements = array(
       'ORDERID' => $request->query->get('ORDERID'),
-      'AMOUNT' => $request->query->get('AMOUNT'),
       'CURRENCY' => $request->query->get('CURRENCY'),
+      'AMOUNT' => $request->query->get('AMOUNT'),
       'PM' => 'CreditCard',
       'ACCEPTANCE' => 'test123',
       'STATUS' => (empty($callback_status) ? 5 : $callback_status),
       'CARDNO' => 'XXXXXXXXXXXX1111',
-      'PAYID' => 1136745,
+      'ED' => '',
+      'CN' => 'Smith  John',
+      'TRXDATE' => '04/20/15',
+      'PAYID' => 01234567,
       'NCERROR' => 0,
       'BRAND' => 'VISA',
+      'IPCTY' => 'CH',
+      'CCCTY' => '99',
+      'ECI' => 7,
+      'CVCCheck' => 'NO',
+      'AAVCheck' => 'NO',
+      'VC' => '',
+      'IP' => $request->getClientIp(),
     );
 
     $form_elements['SHASIGN'] = PostfinanceHelper::generateShaSign($form_elements, $plugin_definition['sha_out_key']);
-
-    drupal_set_message($form_elements['SHASIGN']);
-
-    foreach ($form_elements as $key => $value) {
-      $form[$key] = array(
-        '#type' => 'hidden',
-        '#value' => $value,
-      );
-    }
 
     // Generate payment link with correct callback query parameters.
     $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'ACCEPT';
@@ -100,7 +101,9 @@ class PostfinanceTestForm extends FormBase {
     }
 
     // Complete the form.
-    $form['#action'] = $response_url;
+    $form['#action'] = Url::fromUri($response_url, array(
+        'query' => $form_elements,
+    ))->toString();
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = array(
       '#type' => 'submit',

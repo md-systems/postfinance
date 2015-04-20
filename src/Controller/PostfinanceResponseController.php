@@ -37,21 +37,9 @@ class PostfinanceResponseController {
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
     try {
-      $request_array = $request->request->all();
-      $sha_sent = $request->request->get('SHASIGN');
-
-      $request_data = array(
-        'ORDERID' => $request->request->get('ORDERID'),
-        'AMOUNT' => $request->request->get('AMOUNT'),
-        'CURRENCY' => $request->request->get('CURRENCY'),
-        'PM' => $request->request->get('PM'),
-        'ACCEPTANCE' => $request->request->get('ACCEPTANCE'),
-        'STATUS' => $request->request->get('STATUS'),
-        'CARDNO' => $request->request->get('CARDNO'),
-        'PAYID' => $request->request->get('PAYID'),
-        'NCERROR' => $request->request->get('NCERROR'),
-        'BRAND' => $request->request->get('BRAND'),
-      );
+      $request_data = $request->query->all();
+      $sha_sent = $request_data['SHASIGN'];
+      unset($request_data['SHASIGN']);
 
       // Generate SHASign from request data.
       $sha_sign = PostfinanceHelper::generateShaSign($request_data, $plugin_definition['sha_out_key']);
@@ -61,11 +49,11 @@ class PostfinanceResponseController {
         throw new \Exception('Invalid postfinance key.');
       }
 
-      if ($request_array['STATUS'] == 'error') {
+      if ($request_data['STATUS'] == 'error') {
         throw new \Exception('There was an error processing the request:' . $request_data['NCERROR']);
       }
 
-      if ($request_array['STATUS'] == 5) {
+      if ($request_data['STATUS'] == 5) {
         drupal_set_message(t('Payment successful.'));
         return $this->savePayment($payment, 'payment_success');
       }

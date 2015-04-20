@@ -26,12 +26,9 @@ class PostfinanceHelper {
     // Sort array in alphabetical order by key.
     $payment_data = array_change_key_case($payment_data, CASE_UPPER);
     ksort($payment_data);
-    // Unset values that are not allowed in SHA-IN or SHA-OUT calls.
-    unset($payment_data['SHASIGN'], $payment_data['FORM_BUILD_ID'], $payment_data['FORM_TOKEN'],
-      $payment_data['FORM_ID'], $payment_data['OP']);
     // Create SHA string that will be encrypted.
     foreach ($payment_data as $key => $value) {
-      if (isset($value)) {
+      if ($value !== '') {
         $string .= $key . '=' . $value . $secret_key;
       }
     }
