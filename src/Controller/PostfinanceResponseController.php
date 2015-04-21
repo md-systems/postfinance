@@ -35,7 +35,6 @@ class PostfinanceResponseController {
   public function processAcceptResponse(Request $request, PaymentInterface $payment) {
     // The definition of the plugin implementation.
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
-
     try {
       $request_data = $request->query->all();
       $sha_sent = $request_data['SHASIGN'];
@@ -53,7 +52,7 @@ class PostfinanceResponseController {
         throw new \Exception('There was an error processing the request:' . $request_data['NCERROR']);
       }
 
-      if ($request_data['STATUS'] == 5) {
+      if ($request_data['STATUS'] == 5 || $request_data['STATUS'] == 9) {
         drupal_set_message(t('Payment successful.'));
         return $this->savePayment($payment, 'payment_success');
       }
