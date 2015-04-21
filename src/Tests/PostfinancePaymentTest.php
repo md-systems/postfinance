@@ -215,10 +215,10 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
+    $this->assertText('Payment processing declined.');
 
     // Check if payment was succesfully declined.
     $this->drupalGet('payment/1');
-    $this->assertText('Payment processing declined.');
     $this->assertNoText('Completed');
     $this->assertText('Failed');
   }
@@ -245,10 +245,10 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
+    $this->assertText('Payment processing exception.');
 
     // Check if payment was created with an exception error.
     $this->drupalGet('payment/1');
-    $this->assertText('Payment processing exception.');
     $this->assertNoText('Completed');
     $this->assertText('Failed');
   }
@@ -275,10 +275,10 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Finish payment.
     $this->drupalPostForm(NULL, array(), t('Submit'));
+    $this->assertText('Payment processing cancelled.');
 
     // Check if payment was succesfully cancelled.
     $this->drupalGet('payment/1');
-    $this->assertText('Payment processing cancelled.');
     $this->assertNoText('Completed');
     $this->assertText('Cancelled');
   }

@@ -10,6 +10,7 @@ use Drupal\currency\Entity\Currency;
 use Drupal\payment\Entity\Payment;
 use Drupal\payment\Entity\PaymentInterface;
 use Drupal\payment_postfinance\PostfinanceHelper;
+use SebastianBergmann\Exporter\Exception;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -77,11 +78,20 @@ class PostfinanceResponseController {
    *   The Payment Entity type.
    */
   public function processDeclineResponse(Request $request, PaymentInterface $payment) {
-    $this->savePayment($payment, 'payment_failed');
-
-    $message = 'Postfinance communication declined. Invalid data received from Postfinance.';
-    \Drupal::logger('postfinance')->error('Processing declined with exception @e.', array('@e' => $message));
-    drupal_set_message(t('Payment processing declined.'), 'error');
+    try {
+      $request_data = $request->query->all();
+      if ($request_data['STATUS'] == 2) {
+        drupal_set_message(t('Payment processing declined.'), 'error');
+        \Drupal::logger(t('Payment declined: @error'), array('@error' => 'Payment processing declined.'))
+          ->warning('PostfinanceResponseController.php');
+        return $this->savePayment($payment, 'payment_failed', 'error');
+      }
+    }
+    catch (Exception $e) {
+      \Drupal::logger('postfinance')->error('Processing declined with exception @e.', array('@e' => 'Postfinance communication declined. Invalid data received from Postfinance.'));
+      drupal_set_message(t('Processing declined with exception @e..', array('@e' => 'Postfinance communication declined. Invalid data received from Postfinance.')), 'error');
+      return $this->savePayment($payment, 'payment_failed', 'error');
+    }
   }
 
   /**
@@ -97,11 +107,20 @@ class PostfinanceResponseController {
    *   The Payment Entity type.
    */
   public function processExceptionResponse(Request $request, PaymentInterface $payment) {
-    $this->savePayment($payment, 'payment_failed');
-
-    $message = 'Postfinance communication exception. Invalid data received from Postfinance.';
-    \Drupal::logger('postfinance')->error('Processing failed with exception @e.', array('@e' => $message));
-    drupal_set_message(t('Payment processing exception.'), 'error');
+    try {
+      $request_data = $request->query->all();
+      if ($request_data['STATUS'] == 52 || $request_data['STATUS'] == 92) {
+        drupal_set_message(t('Payment processing exception.'), 'error');
+        \Drupal::logger(t('Payment declined: @error'), array('@error' => 'Payment processing exception.'))
+          ->warning('PostfinanceResponseController.php');
+        return $this->savePayment($payment, 'payment_failed', 'error');
+      }
+    }
+    catch (Exception $e) {
+      \Drupal::logger('postfinance')->error('Processing declined with exception @e.', array('@e' => 'Postfinance communication declined. Invalid data received from Postfinance.'));
+      drupal_set_message(t('Processing declined with exception @e..', array('@e' => 'Postfinance communication declined. Invalid data received from Postfinance.')), 'error');
+      return $this->savePayment($payment, 'payment_failed', 'error');
+    }
   }
 
   /**
@@ -117,11 +136,20 @@ class PostfinanceResponseController {
    *   The Payment Entity type.
    */
   public function processCancelResponse(Request $request, PaymentInterface $payment) {
-    $this->savePayment($payment, 'payment_cancelled');
-
-    $message = 'Postfinance communication cancelled. Payment cancelled';
-    \Drupal::logger('postfinance')->error('Processing failed with exception @e.', array('@e' => $message));
-    drupal_set_message(t('Payment processing cancelled.'), 'error');
+    try {
+      $request_data = $request->query->all();
+      if ($request_data['STATUS'] == 1) {
+        drupal_set_message(t('Payment processing cancelled.'), 'error');
+        \Drupal::logger(t('Payment canceled: @error'), array('@error' => 'Payment processing cancelled.'))
+          ->warning('PostfinanceResponseController.php');
+        return $this->savePayment($payment, 'payment_cancelled', 'error');
+      }
+    }
+    catch (Exception $e) {
+      \Drupal::logger('postfinance')->error('Processing declined with exception @e.', array('@e' => 'Postfinance communication declined. Invalid data received from Postfinance.'));
+      drupal_set_message(t('Processing declined with exception @e.', array('@e' => 'Postfinance communication declined. Invalid data received from Postfinance.')), 'error');
+      return $this->savePayment($payment, 'payment_failed', 'error');
+    }
   }
 
   /**
