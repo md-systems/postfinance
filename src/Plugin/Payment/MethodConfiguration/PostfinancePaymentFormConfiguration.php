@@ -76,14 +76,15 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
    */
   public function defaultConfiguration() {
     return parent::defaultConfiguration() + array(
-      'pspid' => 'drupalDEMO',
-      'sha_in_key' => 'Mysecretsig1875!?',
-      'sha_out_key' => 'ShaOUTpassphrase123!?',
+      'pspid' => '',
+      'language' => '',
+      'sha_in_key' => '',
+      'sha_out_key' => '',
     );
   }
 
   /**
-   * @param $psid
+   * @param string $psid
    * @return $this
    */
   public function setPSPID($psid) {
@@ -185,7 +186,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
       '#options' => array(
         'en_US' => t('English'),
       ),
-      '#description' => 'Your affiliation name in the postfinance system.',
+      '#description' => 'Language the payment site should display',
       '#default_value' => $this->getLanguage(),
     );
 
@@ -195,9 +196,14 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   }
 
   /**
+   * Validates all Form fields.
+   *
    * @param array $element
+   *   Parent element which will be used.
    * @param FormStateInterface $form_state
+   *   The current state of the form.
    * @param array $form
+   *   The form itself.
    */
   public function formElementsValidate(array $element, FormStateInterface $form_state, array $form) {
     $values = NestedArray::getValue($form_state->getValues(), $element['#parents']);

@@ -1,0 +1,44 @@
+payment.plugin_configuration.payment_method_configuration.payment_postfinance_payment_form:
+  type: payment.plugin_configuration.payment_method_configuration.payment_base
+  mapping:
+    pspid:
+      type: string
+      label: Postfinance Payment ID
+    sha_in_key:
+      type: string
+      label: SHA In Key
+    sha_out_key:
+      type: string
+      label: SHA Out Key
+    language:
+      type: string
+      label: Language
+    customer_name:
+      type: string
+      label: Customer Name
+    email:
+      type: string
+      label: customer eMail
+    zip:
+      type: string
+      label: Customer ZIP code
+    address:
+      type: string
+      label: Customer Address
+    city:
+      type: string
+      label: Customer City
+    town:
+      type: string
+      label: Customer Town
+    telephone:
+      type: string
+      label: Customer telephone number
+
+payment_postfinance.settings:
+  type: mapping
+  label: Postfinance settings
+  mapping:
+    payment_link:
+      type: string
+      label: Payment link

@@ -1,13 +1,13 @@
-id: postfinance_payment_form
+id: payment_postfinance_payment_form
 label: 'Postfinance Payment Form'
 ownerId: 1
 pluginConfiguration:
-  message_text: ''
+  message_text: 'Postfinance Payment Form'
   message_text_format: plain_text
-  pspid: drupalDEMO
-  sha_in_key: 'Mysecretsig1875!?'
-  sha_out_key: 'ShaOUTpassphrase123!?'
+  pspid: ''
   language: 'en_US'
+  sha_in_key: ''
+  sha_out_key: ''
 pluginId: payment_postfinance_payment_form
 status: true
 uuid: 324fad23-d1da-4059-b621-3378fa67b480

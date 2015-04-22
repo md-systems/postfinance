@@ -36,39 +36,53 @@ class PostfinanceTestForm extends FormBase {
     }
 
     // Load payment.
+    /** @var \Drupal\payment\Entity\payment $payment */
     $payment = Payment::load($request->query->get('ORDERID'));
 
     // Load payment method configuration.
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
-    // Callback status
+    // Callback status.
     $callback_status = \Drupal::state()->get('postfinance.callback_status');
 
-    // Generate the callback parameters to be send back.
-    $callback_parameters = array(
+    // Generate the callback parameters to be sent.
+    $form_elements = array(
       'ORDERID' => $request->query->get('ORDERID'),
-      'AMOUNT' => $request->query->get('AMOUNT'),
       'CURRENCY' => $request->query->get('CURRENCY'),
+      'AMOUNT' => $request->query->get('AMOUNT'),
       'PM' => 'CreditCard',
       'ACCEPTANCE' => 'test123',
       'STATUS' => (empty($callback_status) ? 5 : $callback_status),
       'CARDNO' => 'XXXXXXXXXXXX1111',
-      'PAYID' => 1136745,
+      'ED' => '',
+      'CN' => 'Smith  John',
+      'TRXDATE' => '04/20/15',
+      'PAYID' => 01234567,
       'NCERROR' => 0,
       'BRAND' => 'VISA',
+      'IPCTY' => 'CH',
+      'CCCTY' => '99',
+      'ECI' => 7,
+      'CVCCheck' => 'NO',
+      'AAVCheck' => 'NO',
+      'VC' => '',
+      'IP' => $request->getClientIp(),
     );
 
-    // Generate SHA-OUT signature
-    $callback_parameters['SHASIGN'] = PostfinanceHelper::generateShaSign($callback_parameters, $plugin_definition['sha_out_key']);
+    // Generate Signature if it wasn't set for testing purposes.
+    $form_elements['SHASIGN'] = \Drupal::state()->get('postfinance.signature') ?: PostfinanceHelper::generateShaSign($form_elements, $plugin_definition['sha_out_key']);
 
     // Generate payment link with correct callback query parameters.
     $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'ACCEPT';
-    $response_url = Url::fromUri($request->query->get($response_url_key . 'URL'), array(
-      'query' => $callback_parameters,
-    ))->toString();
+
+    // The URL for the response is generated according to a key.
+    $response_url_dyn = $response_url_key . 'URL';
+    $response_url = $request->query->get($response_url_dyn);
 
     // Complete the form.
-    $form['#action'] = $response_url;
+    $form['#action'] = Url::fromUri($response_url, array(
+        'query' => $form_elements,
+    ))->toString();
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = array(
       '#type' => 'submit',
@@ -83,7 +97,7 @@ class PostfinanceTestForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    drupal_set_message("Form submitted");
+    drupal_set_message("Submit Form");
   }
 
 }
