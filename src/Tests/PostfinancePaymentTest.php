@@ -29,7 +29,6 @@ class PostfinancePaymentTest extends WebTestBase {
     'payment_postfinance_test',
     'node',
     'field_ui',
-    'config',
   );
 
   /**
@@ -116,7 +115,7 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->drupalLogin($this->admin_user);
 
     // Set payment link to test mode.
-    $payment_config = \Drupal::configFactory()->getEditable('payment_postfinance.settings');
+    $payment_config = $this->config('payment_postfinance.settings');
     $payment_config->set('payment_link', Url::fromRoute('postfinance_test.postfinance_test_form', array(), ['absolute' => TRUE])->toString());
     $payment_config->save();
     $this->config('');
@@ -132,9 +131,6 @@ class PostfinancePaymentTest extends WebTestBase {
 
     // Load payment configuration.
     $payment_config = $this->config('payment_postfinance.settings');
-
-    // Check if payment link is correctly set.
-    $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
 
     // Modifies the postfinance configuration for testing purposes.
     $postfinance_configuration = array(
@@ -281,6 +277,61 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->drupalGet('payment/1');
     $this->assertNoText('Completed');
     $this->assertText('Cancelled');
+  }
+  /**
+   * Tests wrong signature validation in Postfinance payment.
+   */
+  function testPostfinanceWrongSignature() {
+    // Load payment configuration.
+    $payment_config = $this->config('payment_postfinance.settings');
+
+    // Set callback status to accept payment and modify the signature.
+    \Drupal::state()->set('postfinance.return_url_key', 'ACCEPT');
+    \Drupal::state()->set('postfinance.testing', TRUE);
+    \Drupal::state()->set('postfinance.signature', 'AAA');
+
+    // Check if payment link is correctly set.
+    $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
+
+    // Create Postfinance payment.
+    $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
+
+    // Finish payment.
+    $this->drupalPostForm(NULL, array(), t('Submit'));
+    $this->assertText('Payment failed. Signature invalid.');
+
+    // Check if payment was succesfully cancelled.
+    $this->drupalGet('payment/1');
+    $this->assertNoText('Completed');
+    $this->assertText('Failed');
+  }
+
+  /**
+   * Tests wrong signature validation in Postfinance payment.
+   */
+  function testPostfinanceStatusError() {
+    // Load payment configuration.
+    $payment_config = $this->config('payment_postfinance.settings');
+
+    // Set callback status to accept payment and modify the signature.
+    \Drupal::state()->set('postfinance.return_url_key', 'ACCEPT');
+    \Drupal::state()->set('postfinance.testing', TRUE);
+    \Drupal::state()->set('postfinance.callback_status', 'error');
+
+    // Check if payment link is correctly set.
+    $this->assertEqual($payment_config->get('payment_link'), $GLOBALS['base_url'] . Url::fromRoute('postfinance_test.postfinance_test_form')->toString());
+
+    // Create Postfinance payment.
+    $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
+
+    // Finish payment.
+    $this->drupalPostForm(NULL, array(), t('Submit'));
+    $this->assertText('Payment failed. There was an error processing the request.');
+
+    // Check if payment was succesfully cancelled.
+    $this->drupalGet('payment/1');
+    $this->assertNoText('Completed');
+    $this->assertText('Failed');
   }
 
   /**

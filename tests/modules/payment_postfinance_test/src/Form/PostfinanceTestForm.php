@@ -7,13 +7,10 @@
 
 namespace Drupal\payment_postfinance_test\Form;
 
-use Drupal\Component\Utility\Crypt;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\payment\Entity\Payment;
-use Drupal\payment_postfinance\Controller\PostfinanceResponseController;
 use Drupal\payment_postfinance\PostfinanceHelper;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -72,33 +69,15 @@ class PostfinanceTestForm extends FormBase {
       'IP' => $request->getClientIp(),
     );
 
-    $form_elements['SHASIGN'] = PostfinanceHelper::generateShaSign($form_elements, $plugin_definition['sha_out_key']);
+    // Generate Signature if it wasn't set for testing purposes.
+    $form_elements['SHASIGN'] = \Drupal::state()->get('postfinance.signature') ?: PostfinanceHelper::generateShaSign($form_elements, $plugin_definition['sha_out_key']);
 
     // Generate payment link with correct callback query parameters.
     $response_url_key = \Drupal::state()->get('postfinance.return_url_key') ?: 'ACCEPT';
 
     // The URL for the response is generated according to a key.
-    switch ($response_url_key) {
-      case 'ACCEPT':
-        $response_url = $request->query->get('ACCEPTURL');
-        break;
-
-      case 'DECLINE':
-        $response_url = $request->query->get('DECLINEURL');
-        break;
-
-      case 'EXCEPTION':
-        $response_url = $request->query->get('EXCEPTIONURL');
-        break;
-
-      case 'CANCEL':
-        $response_url = $request->query->get('CANCELURL');
-        break;
-
-      default:
-        $response_url = $request->query->get('EXCEPTIONURL');
-        break;
-    }
+    $response_url_dyn = $response_url_key . 'URL';
+    $response_url = $request->query->get($response_url_dyn);
 
     // Complete the form.
     $form['#action'] = Url::fromUri($response_url, array(
