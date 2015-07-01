@@ -10,6 +10,9 @@ payment.plugin_configuration.payment_method_configuration.payment_postfinance_pa
     sha_out_key:
       type: string
       label: SHA Out Key
+    debug:
+      type: boolean
+      label: Log repsonses
     language:
       type: string
       label: Language

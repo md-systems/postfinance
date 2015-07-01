@@ -29,6 +29,7 @@ class PostfinancePaymentTest extends WebTestBase {
     'payment_postfinance_test',
     'node',
     'field_ui',
+    'dblog',
   );
 
   /**
@@ -110,6 +111,7 @@ class PostfinancePaymentTest extends WebTestBase {
       'access administration pages',
       'access user profiles',
       'payment.payment.view.any',
+      'access site reports',
     ));
     $this->drupalLogin($this->admin_user);
 
@@ -138,6 +140,16 @@ class PostfinancePaymentTest extends WebTestBase {
     // Set payment to accept.
     \Drupal::state()->set('postfinance.return_url_key', 'ACCEPT');
     \Drupal::state()->set('postfinance.testing', TRUE);
+
+    $this->drupalGet('admin/config/services/payment/method/configuration/payment_postfinance_payment_form');
+    // Test the debug checkbox.
+    $this->assertNoFieldChecked('edit-plugin-form-debug');
+    $edit = [
+        'plugin_form[debug]' => TRUE,
+    ];
+    $this->drupalPostForm(NULL, $edit, t('Save'));
+    $this->drupalGet('admin/config/services/payment/method/configuration/payment_postfinance_payment_form');
+    $this->assertFieldChecked('edit-plugin-form-debug');
 
     // Create postfinance payment.
     $this->drupalPostForm('node/' . $this->node->id(), array(), t('Pay'));
@@ -178,6 +190,10 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->assertText('CHF 123.00');
     $this->assertText('CHF 246.00');
     $this->assertText('Completed');
+
+    // Check the log for the response debug.
+    $this->drupalGet('/admin/reports/dblog');
+    $this->assertText('Payment success response:');
   }
 
   /**
@@ -186,7 +202,7 @@ class PostfinancePaymentTest extends WebTestBase {
   function testPostfinanceDeclinePayment() {
     // Set payment to decline.
     \Drupal::state()->set('postfinance.return_url_key', 'DECLINE');
-
+    $this->drupalPostForm('admin/config/services/payment/method/configuration/payment_postfinance_payment_form', ['plugin_form[debug]' => TRUE], t('Save'));
 
     // Load payment configuration.
     $payment_config = $this->config('payment_postfinance.settings');
@@ -206,12 +222,19 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->drupalGet('payment/1');
     $this->assertNoText('Completed');
     $this->assertText('Failed');
+
+    // Check the log for the response debug.
+    $this->drupalGet('/admin/reports/dblog');
+    $this->assertText('Payment decline response:');
   }
 
   /**
    * Tests exception Postfinance payment.
    */
   function testPostfinanceExceptionPayment() {
+    // Enable logging of responses.
+    $this->drupalPostForm('admin/config/services/payment/method/configuration/payment_postfinance_payment_form', ['plugin_form[debug]' => TRUE], t('Save'));
+
     // Set callback status to decline payment.
     \Drupal::state()->set('postfinance.callback_status', 52);
     \Drupal::state()->set('postfinance.testing', TRUE);
@@ -230,12 +253,19 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->drupalGet('payment/1');
     $this->assertNoText('Completed');
     $this->assertText('Failed');
+
+    // Check the log for the response debug.
+    $this->drupalGet('/admin/reports/dblog');
+    $this->assertText('Payment exception response:');
   }
 
   /**
    * Tests cancel Postfinance payment.
    */
   function testPostfinanceCancelPayment() {
+    // Enable logging of responses.
+    $this->drupalPostForm('admin/config/services/payment/method/configuration/payment_postfinance_payment_form', ['plugin_form[debug]' => TRUE], t('Save'));
+
     // Set callback status to decline payment.
     \Drupal::state()->set('postfinance.callback_status', 1);
     \Drupal::state()->set('postfinance.testing', TRUE);
@@ -254,6 +284,10 @@ class PostfinancePaymentTest extends WebTestBase {
     $this->drupalGet('payment/1');
     $this->assertNoText('Completed');
     $this->assertText('Cancelled');
+
+    // Check the log for the response debug.
+    $this->drupalGet('/admin/reports/dblog');
+    $this->assertText('Payment cancel response:');
   }
   /**
    * Tests wrong signature validation in Postfinance payment.
