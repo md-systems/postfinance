@@ -152,7 +152,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
     return $this->configuration['language'];
   }
   /**
-   * Enables logging the response from Postfinance.
+   * En/disable logging the response from Postfinance.
    *
    * @param bool $state
    *   Whether debugging should be dis/enabled.
@@ -162,7 +162,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   }
 
   /**
-   * Disables logging the response from Postfinance.
+   * Returns the state of the debug setting.
    */
   public function getDebug() {
     return $this->configuration['debug'];
