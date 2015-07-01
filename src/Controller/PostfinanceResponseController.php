@@ -38,7 +38,7 @@ class PostfinanceResponseController {
         past_event_save('postfinance', 'response_success', 'Success response - Payment ' . $payment->id() . ': POST data', ['POST' => $request->request->all(), 'Payment' => $payment]);
       }
       else {
-        \Drupal::logger('postfinance')->debug(t('Payment success response: @response', ['@response' => $request->request->all()]));
+        \Drupal::logger('postfinance')->debug(t('Payment success response: @response', ['@response' => implode(', ', $request->request->all())]));
       }
     }
 
