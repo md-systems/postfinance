@@ -36,7 +36,7 @@ payment.plugin_configuration.payment_method_configuration.payment_postfinance_pa
       label: Customer telephone number
 
 payment_postfinance.settings:
-  type: mapping
+  type: config_object
   label: Postfinance settings
   mapping:
     payment_link:
