@@ -11,7 +11,7 @@ use Drupal\Component\Plugin\ConfigurablePluginInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\currency\Entity\Currency;
-use Drupal\payment\PaymentExecutionResult;
+use Drupal\payment\OperationResult;
 use Drupal\payment\Plugin\Payment\Method\PaymentMethodBase;
 use Drupal\payment_postfinance\PostfinanceHelper;
 use Drupal\payment\Response\Response;
@@ -41,10 +41,11 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
     $this->configuration[$key] = $value;
     return $this;
   }
+
   /**
    * Executes the Payment and returns the result.
    *
-   * @return \Drupal\Payment\PaymentExecutionResult
+   * @return \Drupal\Payment\OperationResult
    *   Return with Payment Result.
    */
   public function getPaymentExecutionResult() {
@@ -79,7 +80,7 @@ class PostfinancePaymentFormMethod extends PaymentMethodBase implements Containe
       'absolute' => TRUE,
       'query' => $payment_data,
     )));
-    return new PaymentExecutionResult($response);
+    return new OperationResult($response);
   }
 
   /**
