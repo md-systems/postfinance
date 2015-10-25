@@ -82,12 +82,12 @@ class PostfinanceResponseController {
     $request_data = $request->query->all();
     if ($request_data['STATUS'] == 2) {
       drupal_set_message(t('Payment processing declined.'), 'error');
-      \Drupal::logger(t('Payment declined: @error'), array('@error' => 'Payment processing declined.'))
-        ->warning('PostfinanceResponseController.php');
+      \Drupal::logger('payment_postfinance')
+        ->warning('Payment declined: @error', array('@error' => 'Payment processing declined.'));
       return $this->savePayment($payment, 'payment_failed');
     }
 
-    \Drupal::logger('postfinance')->error('Processing failed: @error', array('@error' => 'There was an error processing the request.'));
+    \Drupal::logger('payment_postfinance')->error('Processing failed: @error', array('@error' => 'There was an error processing the request.'));
     drupal_set_message(t('Processing failed: @error', array('@error' => 'There was an error processing the request.')), 'error');
     return $this->savePayment($payment, 'payment_failed');
 
@@ -113,8 +113,8 @@ class PostfinanceResponseController {
     $request_data = $request->query->all();
     if ($request_data['STATUS'] == 52 || $request_data['STATUS'] == 92) {
       drupal_set_message(t('Payment processing exception.'), 'error');
-      \Drupal::logger(t('Payment declined: @error'), array('@error' => 'Payment processing exception.'))
-        ->warning('PostfinanceResponseController.php');
+      \Drupal::logger('payment_postfinance')
+        ->warning('Payment declined: @error', array('@error' => 'Payment processing exception.'));
       return $this->savePayment($payment, 'payment_failed');
     }
 
@@ -144,12 +144,10 @@ class PostfinanceResponseController {
     $request_data = $request->query->all();
     if ($request_data['STATUS'] == 1) {
       drupal_set_message(t('Payment processing cancelled.'), 'warning');
-      \Drupal::logger(t('Payment canceled: @error'), array('@error' => 'Payment processing cancelled.'))
-        ->warning('PostfinanceResponseController.php');
       return $this->savePayment($payment, 'payment_cancelled');
     }
 
-    \Drupal::logger('postfinance')->error('Processing failed: @error', array('@error' => 'There was an error processing the request.'));
+    \Drupal::logger('payment_postfinance')->error('Processing failed: @error', array('@error' => 'There was an error processing the request.'));
     drupal_set_message(t('Processing failed: @error', array('@error' => 'There was an error processing the request.')), 'error');
     return $this->savePayment($payment, 'payment_failed');
   }
