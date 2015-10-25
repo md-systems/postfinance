@@ -46,8 +46,8 @@ class PostfinanceResponseController {
     // Check if the sent signature is valid.
     if ($sha_sign != $sha_sent) {
       drupal_set_message(t('Payment failed. Signature invalid.'), 'error');
-      \Drupal::logger(t('Payment failed: @error'), array('@error' => 'Signature invalid.'))
-        ->warning('PostfinanceResponseController.php');
+      \Drupal::logger('payment_postfinance')
+        ->warning('Payment failed: @error', array('@error' => 'Signature invalid'));
       return $this->savePayment($payment, 'payment_failed');
     }
 
@@ -57,8 +57,8 @@ class PostfinanceResponseController {
     }
     // If no case fits, fail the payment.
     drupal_set_message(t('Payment failed. There was an error processing the request.'), 'error');
-    \Drupal::logger(t('Payment failed: @error'), array('@error' => 'There was an error processing the request.'))
-      ->warning('PostfinanceResponseController.php');
+    \Drupal::logger('payment_postfinance')
+      ->warning('Payment failed: @error', array('@error' => 'There was an error processing the request.'));
     return $this->savePayment($payment, 'payment_failed');
 
   }
