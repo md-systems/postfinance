@@ -33,6 +33,15 @@ class PostfinanceResponseController {
    *   The Response to the accepting request.
    */
   public function processAcceptResponse(Request $request, PaymentInterface $payment) {
+    if (\Drupal::config('payment.payment_method_configuration.payment_postfinance_payment_form')->get('pluginConfiguration')['debug']) {
+      if (\Drupal::moduleHandler()->moduleExists('past')) {
+        past_event_save('postfinance', 'response_success', 'Success response - Payment ' . $payment->id() . ': POST data', ['POST' => $request->request->all(), 'Payment' => $payment]);
+      }
+      else {
+        \Drupal::logger('postfinance')->debug(t('Payment success response: @response', ['@response' => implode(', ', $request->request->all())]));
+      }
+    }
+
     // The definition of the plugin implementation.
     $plugin_definition = $payment->getPaymentMethod()->getPluginDefinition();
 
@@ -78,6 +87,14 @@ class PostfinanceResponseController {
    *   The Response to the accepting request.
    */
   public function processDeclineResponse(Request $request, PaymentInterface $payment) {
+    if (\Drupal::config('payment.payment_method_configuration.payment_postfinance_payment_form')->get('pluginConfiguration')['debug']) {
+      if (\Drupal::moduleHandler()->moduleExists('past')) {
+        past_event_save('postfinance', 'response_decline', 'Decline response - Payment ' . $payment->id() . ': POST data', ['POST' => $request->request->all(), 'Payment' => $payment]);
+      }
+      else {
+        \Drupal::logger('postfinance')->debug(t('Payment decline response: @response', ['@response' => implode(', ', $request->request->all())]));
+      }
+    }
 
     $request_data = $request->query->all();
     if ($request_data['STATUS'] == 2) {
@@ -109,6 +126,14 @@ class PostfinanceResponseController {
    *   The Response to the accepting request.
    */
   public function processExceptionResponse(Request $request, PaymentInterface $payment) {
+    if (\Drupal::config('payment.payment_method_configuration.payment_postfinance_payment_form')->get('pluginConfiguration')['debug']) {
+      if (\Drupal::moduleHandler()->moduleExists('past')) {
+        past_event_save('postfinance', 'response_exception', 'Exception response - Payment ' . $payment->id() . ': POST data', ['POST' => $request->request->all(), 'Payment' => $payment]);
+      }
+      else {
+        \Drupal::logger('postfinance')->debug(t('Payment exception response: @response', ['@response' => implode(', ', $request->request->all())]));
+      }
+    }
 
     $request_data = $request->query->all();
     if ($request_data['STATUS'] == 52 || $request_data['STATUS'] == 92) {
@@ -140,6 +165,14 @@ class PostfinanceResponseController {
    *   The Response to the accepting request.
    */
   public function processCancelResponse(Request $request, PaymentInterface $payment) {
+    if (\Drupal::config('payment.payment_method_configuration.payment_postfinance_payment_form')->get('pluginConfiguration')['debug']) {
+      if (\Drupal::moduleHandler()->moduleExists('past')) {
+        past_event_save('postfinance', 'response_cancel', 'Cancel response - Payment ' . $payment->id() . ': POST data', ['POST' => $request->request->all(), 'Payment' => $payment]);
+      }
+      else {
+        \Drupal::logger('postfinance')->debug(t('Payment cancel response: @response', ['@response' => implode(', ', $request->request->all())]));
+      }
+    }
 
     $request_data = $request->query->all();
     if ($request_data['STATUS'] == 1) {

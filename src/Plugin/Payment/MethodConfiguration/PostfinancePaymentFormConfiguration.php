@@ -80,6 +80,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
       'language' => '',
       'sha_in_key' => '',
       'sha_out_key' => '',
+      'debug' => FALSE,
     );
   }
 
@@ -150,6 +151,22 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
   public function getLanguage() {
     return $this->configuration['language'];
   }
+  /**
+   * En/disable logging the response from Postfinance.
+   *
+   * @param bool $state
+   *   Whether debugging should be dis/enabled.
+   */
+  public function setDebug($state = TRUE) {
+    $this->configuration['debug'] = $state;
+  }
+
+  /**
+   * Returns the state of the debug setting.
+   */
+  public function getDebug() {
+    return $this->configuration['debug'];
+  }
 
   /**
    * {@inheritdoc}
@@ -190,6 +207,12 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
       '#default_value' => $this->getLanguage(),
     );
 
+    $form['debug'] = array(
+      '#type' => 'checkbox',
+      '#title' => 'Log response from Postfinance server',
+      '#default_value' => $this->getDebug(),
+    );
+
     // @TODO: Create production and testing option.
 
     return $form;
@@ -212,6 +235,7 @@ class PostfinancePaymentFormConfiguration extends PaymentMethodConfigurationBase
     $this->setShaInKey($values['sha_in_key']);
     $this->setShaOutKey($values['sha_out_key']);
     $this->setLanguage($values['language']);
+    $this->setDebug($values['debug']);
   }
 
 }
